@@ -14,9 +14,12 @@ namespace NZXTHUEAmbient
         private bool _transactionStarted = false;
         private Color[] _transactionColors;
         private Color _currentAllLedsColor;
-        private Color[] _currentSingleLedColor;
+        private Color[] _currentLedsColor;
         private int _totalLedCount;
         private IDevice _device;
+
+        //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
+        //Todo: Functions to set easily corners (lefttop, righttop, leftbottom, rightbottom) and sides (up, down, left, right)
         private async Task InitDevice(int totalLedCount)
         {
             WindowsHidDeviceFactory.Register(null, null);
@@ -38,15 +41,16 @@ namespace NZXTHUEAmbient
             }
 
             _totalLedCount = totalLedCount;
-            Color[] _currentSingleLedColor = new Color[_totalLedCount];
-    }
+            _currentLedsColor = new Color[_totalLedCount];
+            _device.InitializeAsync().Wait();
+        }
 
         public void InitDeviceSync(int totalLedCount)
         {
             InitDevice(totalLedCount).Wait(5000);
         }
 
-        private async Task SetLeds(Color color)
+        public async Task SetLeds(Color color)
         {
             if (_currentAllLedsColor == color)
                 return;
@@ -71,13 +75,11 @@ namespace NZXTHUEAmbient
             buffer[12] = (byte)color.B; // B
 
             _currentAllLedsColor = color;
-
-            await _device.InitializeAsync();
-
-            var readBuffer = await _device.WriteAndReadAsync(buffer);
+            _device.WriteAndReadAsync(buffer).Wait();
 
             buffer[2] = 0x02; //Channel 2
-            readBuffer = await _device.WriteAndReadAsync(buffer);
+            _device.WriteAndReadAsync(buffer).Wait();
+            _currentLedsColor = Enumerable.Repeat(color, _currentLedsColor.Length).ToArray(); //Refill current array with new color
         }
 
         public void FreeDevice()
@@ -93,7 +95,7 @@ namespace NZXTHUEAmbient
 
         public Color[] GetCurrentColorArray()
         {
-            return _currentSingleLedColor;
+            return _currentLedsColor;
         }
 
         public void SetLedsSync(Color color)
@@ -109,9 +111,8 @@ namespace NZXTHUEAmbient
         public void TransactionStart()
         {
             _transactionStarted = true;
-            _transactionColors = (Color[])_currentSingleLedColor.Clone();
+            _transactionColors = (Color[])_currentLedsColor.Clone();
         }
-
 
         public void TransactionSetLed(int led, Color color)
         {
@@ -129,7 +130,8 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        private async Task SetLeds(Color[] colors)
+        //TODO: Allow non symetrical arrays. For now, it will only work with symetrical channels
+        public async Task SetLeds(Color[] colors)
         {
             if (_device == null)
             {
@@ -140,111 +142,98 @@ namespace NZXTHUEAmbient
             //TODO: Optimize and apply commands only if at least one led changed
             // Channel 1 subchannel 1 leds 0-19
             // Channel 1 subchannel 1 leds 0-19
-            var buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0x10; // Subchannel 1
-            buffer[2] = 0x01; // Channel 1
-            buffer[3] = 0x00; // Unknown
-            for (int i = 4; i <= 61; i = i + 3)
+            var bufferC1S1 = new byte[64]; //Always 20 leds per command
+            bufferC1S1[0] = 0x22; // Per led command
+            bufferC1S1[1] = 0x10; // Subchannel 1
+            bufferC1S1[2] = 0x01; // Channel 1
+            bufferC1S1[3] = 0x00; // Unknown
+
+            for (int i = 4; i <= 61; i = i + 3) //Fill entire array
             {
-                buffer[i] = colors[(i - 4) / 3].G;      // G
-                buffer[i + 1] = colors[(i - 4) / 3].R;  // R
-                buffer[i + 2] = colors[(i - 4) / 3].B;  // B
+                bufferC1S1[i] = colors[(i - 4) / 3].G;      // G
+                bufferC1S1[i + 1] = colors[(i - 4) / 3].R;  // R
+                bufferC1S1[i + 2] = colors[(i - 4) / 3].B;  // B
             }
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
 
-            // Channel 1 subchannel 2 leds 20-24            
-            buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0x11; // Subchannel 1
-            buffer[2] = 0x01; // Channel 1
-            buffer[3] = 0x00; // Unknown
-            for (int i = 4; i <= 25; i = i + 3)
+            // Channel 1 subchannel 2 leds 20-24   
+            var bufferC1S2 = new byte[64];
+            if (_totalLedCount > 40) // 20 is the max capacity per command. If we have more leds, we need second part command
             {
-                buffer[i] = colors[((i - 4) / 3) + 20].G; // G
-                buffer[i + 1] = colors[((i - 4) / 3) + 20].R; // R
-                buffer[i + 2] = colors[((i - 4) / 3) + 20].B; // B
-
+                bufferC1S2[0] = 0x22; // Per led command
+                bufferC1S2[1] = 0x11; // Subchannel 1
+                bufferC1S2[2] = 0x01; // Channel 1
+                bufferC1S2[3] = 0x00; // Unknown
+                for (int i = 4; i <= (_totalLedCount / 2 - 20) * 3 + 1; i = i + 3) //Fill the remaining array
+                {
+                    //((i - 4) / 3) + 20 => (i + 56) / 3
+                    bufferC1S2[i] = colors[(i + 56) / 3].G; // G
+                    bufferC1S2[i + 1] = colors[(i + 56) / 3].R; // R
+                    bufferC1S2[i + 2] = colors[(i + 56) / 3].B; // B
+                }
             }
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
-
             //Create command finalizer for channel 1
-            buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0xa0; // unknown
-            buffer[2] = 0x01; // Channel 1
-            buffer[3] = 0x00; // Unknown
-            buffer[4] = 0x01; // Unknown
-            buffer[7] = 0x1c; // Unknown
-            buffer[10] = 0x80; // Unknown
-            buffer[12] = 0x32; // Unknown
-            buffer[15] = 0x01; // Unknown
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
+            var bufferC1F = new byte[64];
+            bufferC1F = new byte[64];
+            bufferC1F[0] = 0x22; // Per led command
+            bufferC1F[1] = 0xa0; // unknown
+            bufferC1F[2] = 0x01; // Channel 1
+            bufferC1F[3] = 0x00; // Unknown
+            bufferC1F[4] = 0x01; // Unknown
+            bufferC1F[7] = 0x1c; // Unknown
+            bufferC1F[10] = 0x80; // Unknown
+            bufferC1F[12] = 0x32; // Unknown
+            bufferC1F[15] = 0x01; // Unknown
 
+            await  _device.WriteAndReadAsync(bufferC1S1);
+            await _device.WriteAndReadAsync(bufferC1S2);
+            await _device.WriteAndReadAsync(bufferC1F);
 
             // Channel 2 subchannel 1 leds 26-45
-            buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0x10; // Subchannel 1
-            buffer[2] = 0x02; // Channel 2
-            buffer[3] = 0x00; // Unknown
+            var bufferC2S1 = new byte[64];
+            bufferC2S1[0] = 0x22; // Per led command
+            bufferC2S1[1] = 0x10; // Subchannel 1
+            bufferC2S1[2] = 0x02; // Channel 2
+            bufferC2S1[3] = 0x00; // Unknown
             for (int i = 4; i <= 61; i = i + 3)
-            {
-                /*
-                buffer[i] = colors[((i - 4) / 3) + 20 + 8].R;     // R
-                buffer[i + 1] = colors[((i - 4) / 3) + 20 + 8].G; // G
-                buffer[i + 2] = colors[((i - 4) / 3) + 20 + 8].B; // B
-                */
-
-                //inverted
-                buffer[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].G;     // G
-                buffer[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].R; // R
-                buffer[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].B; // B
+            { //(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8) = (colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)
+                bufferC2S1[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].G;     // G
+                bufferC2S1[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)].R; // R
+                bufferC2S1[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)].B; // B
             }
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
 
             // Channel 2 subchanel 2 leds 45-50 
-            buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0x11; // Subchannel 2
-            buffer[2] = 0x02; // Channel 2
-            buffer[3] = 0x00; // Unknown
-            for (int i = 4; i <= 25; i = i + 3)
+            var bufferC2S2 = new byte[64];
+            if (_totalLedCount > 40) // 20 is the max capacity per command. If we have more than 40 leds we have mor than 20 leds per chanel so we need second part command
             {
-                /*
-               buffer[i] = colors[((i - 4) / 3) + 20 + 8 + 20].R;            // R
-               buffer[i + 1] = colors[((i - 4) / 3) + 20 + 8 + 20].G;       // G
-               buffer[i + 2] = colors[((i - 4) / 3) + 20 + 8 + 20].B;      // B
-               */
-
-                //inverted
-                buffer[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].G;            // G
-                buffer[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].R;       // R
-                buffer[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].B;      // B
+                bufferC2S2[0] = 0x22; // Per led command
+                bufferC2S2[1] = 0x11; // Subchannel 2
+                bufferC2S2[2] = 0x02; // Channel 2
+                bufferC2S2[3] = 0x00; // Unknown
+                for (int i = 4; i <= (_totalLedCount / 2 - 20) * 3 + 1; i = i + 3)
+                { //(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)
+                    bufferC2S2[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].G;            // G
+                    bufferC2S2[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].R;       // R
+                    bufferC2S2[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].B;      // B
+                }
             }
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
-
 
             //Create command finalizer for channel 2
-            buffer = new byte[64];
-            buffer[0] = 0x22; // Per led command
-            buffer[1] = 0xa0; // unknown
-            buffer[2] = 0x02; // Channel 2
-            buffer[3] = 0x00; // Unknown
-            buffer[4] = 0x01; // Unknown
-            buffer[7] = 0x1c; // Unknown
-            buffer[10] = 0x80; // Unknown
-            buffer[12] = 0x32; // Unknown
-            buffer[15] = 0x01; // Unknown
-            _device.InitializeAsync().Wait();
-            _device.WriteAndReadAsync(buffer).Wait();
+            var bufferC2F = new byte[64];
+            bufferC2F[0] = 0x22; // Per led command
+            bufferC2F[1] = 0xa0; // unknown
+            bufferC2F[2] = 0x02; // Channel 2
+            bufferC2F[3] = 0x00; // Unknown
+            bufferC2F[4] = 0x01; // Unknown
+            bufferC2F[7] = 0x1c; // Unknown
+            bufferC2F[10] = 0x80; // Unknown
+            bufferC2F[12] = 0x32; // Unknown
+            bufferC2F[15] = 0x01; // Unknown
 
-            _currentSingleLedColor = colors;
+            await _device.WriteAndReadAsync(bufferC2S1);
+            await _device.WriteAndReadAsync(bufferC2S2);
+            await _device.WriteAndReadAsync(bufferC2F);
+
+            _currentLedsColor = colors;
         }
     }
 }
