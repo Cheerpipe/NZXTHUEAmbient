@@ -1,0 +1,10 @@
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\bin\Debug\NZXTHUEAmbient.dll
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\bin\Debug\NZXTHUEAmbient.pdb
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\bin\Debug\Device.Net.dll
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\bin\Debug\Hid.Net.dll
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\bin\Debug\Usb.Net.dll
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\obj\Debug\NZXTHUEAmbient.csprojAssemblyReference.cache
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\obj\Debug\NZXTHUEAmbient.csproj.CoreCompileInputs.cache
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\obj\Debug\NZXTHUEAmbient.csproj.CopyComplete
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\obj\Debug\NZXTHUEAmbient.dll
+D:\Repos\NZXTHUEAmbient\NZXTHUEAmbient\obj\Debug\NZXTHUEAmbient.pdb

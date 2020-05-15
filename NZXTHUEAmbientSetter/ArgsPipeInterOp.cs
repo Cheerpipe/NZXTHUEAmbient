@@ -7,6 +7,7 @@ namespace NZXTHUEAmbientSetter
 {
     public class ArgsPipeInterOp
     {
+        public static bool StopListening = false;
         public void StartArgsPipeServer()
         {
             var s = new NamedPipeServerStream("NZXTHUEAmbientSetter", PipeDirection.In);
@@ -16,7 +17,7 @@ namespace NZXTHUEAmbientSetter
 
         private static void GetArgsCallBack(NamedPipeServerStream pipe)
         {
-            while (true)
+            while (!StopListening)
             {
                 pipe.WaitForConnection();
                 var sr = new StreamReader(pipe);
@@ -24,7 +25,6 @@ namespace NZXTHUEAmbientSetter
                 Program.Run(args);
                 pipe.Disconnect();
             }
-            // ReSharper disable once FunctionNeverReturns
         }
     }
 }
