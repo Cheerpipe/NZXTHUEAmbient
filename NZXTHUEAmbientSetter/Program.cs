@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Win32;
 using NZXTHUEAmbient;
 using System;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace NZXTHUEAmbientSetter
 
         static void Main()
         {
+            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
             controller.InitDeviceSync(56); //I have 56 leds
             var pipeInterOp = new ArgsPipeInterOp();
 
@@ -34,6 +36,11 @@ namespace NZXTHUEAmbientSetter
             pipeInterOp.StartArgsPipeServer();
             _setterThread.Join();
 
+        }
+
+        private static void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        {
+            Run(new string[] { "shutdown" });
         }
 
         public static void DoSetter()
