@@ -11,11 +11,13 @@ namespace NZXTHUEAmbient
 {
     public class HUE2AmbientController
     {
-
+        private bool _transactionStarted = false;
+        private Color[] _transactionColors;
         private Color _currentAllLedsColor;
-        private Color[] _currentSingleLedColor = new Color[50];
+        private Color[] _currentSingleLedColor;
+        private int _totalLedCount;
         private IDevice _device;
-        public async Task InitDevice()
+        private async Task InitDevice(int totalLedCount)
         {
             WindowsHidDeviceFactory.Register(null, null);
             var deviceDefinitions = new List<FilterDeviceDefinition> { new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = 0x1E71, ProductId = 0x2002, Label = "NZXT HUE 2 Ambient" } };
@@ -35,14 +37,16 @@ namespace NZXTHUEAmbient
                 throw new Exception("No device detected");
             }
 
-        }
+            _totalLedCount = totalLedCount;
+            Color[] _currentSingleLedColor = new Color[_totalLedCount];
+    }
 
-        public void InitDeviceSync()
+        public void InitDeviceSync(int totalLedCount)
         {
-            InitDevice().Wait(5000);
+            InitDevice(totalLedCount).Wait(5000);
         }
 
-        public async Task SetLeds(Color color)
+        private async Task SetLeds(Color color)
         {
             if (_currentAllLedsColor == color)
                 return;
@@ -102,7 +106,30 @@ namespace NZXTHUEAmbient
             SetLeds(colors).Wait(100);
         }
 
-        public async Task SetLeds(Color[] colors)
+        public void TransactionStart()
+        {
+            _transactionStarted = true;
+            _transactionColors = (Color[])_currentSingleLedColor.Clone();
+        }
+
+
+        public void TransactionSetLed(int led, Color color)
+        {
+            if (!_transactionStarted)
+                throw new Exception("Transaction not started");
+
+            _transactionColors[led] = color;
+        }
+
+        public void TransactionCommit()
+        {
+            if (!_transactionStarted)
+                throw new Exception("Transaction not started");
+            SetLedsSync(_transactionColors);
+            _transactionStarted = false;
+        }
+
+        private async Task SetLeds(Color[] colors)
         {
             if (_device == null)
             {
@@ -112,8 +139,6 @@ namespace NZXTHUEAmbient
             // Now we have to create four different commands
             //TODO: Optimize and apply commands only if at least one led changed
             // Channel 1 subchannel 1 leds 0-19
-
-          
             // Channel 1 subchannel 1 leds 0-19
             var buffer = new byte[64];
             buffer[0] = 0x22; // Per led command
@@ -122,9 +147,9 @@ namespace NZXTHUEAmbient
             buffer[3] = 0x00; // Unknown
             for (int i = 4; i <= 61; i = i + 3)
             {
-                buffer[i]       = colors[(i - 4) / 3].R;      // R
-                buffer[i + 1]   = colors[(i - 4) / 3].G;  // G
-                buffer[i + 2]   = colors[(i - 4) / 3].B;  // B
+                buffer[i] = colors[(i - 4) / 3].G;      // G
+                buffer[i + 1] = colors[(i - 4) / 3].R;  // R
+                buffer[i + 2] = colors[(i - 4) / 3].B;  // B
             }
             _device.InitializeAsync().Wait();
             _device.WriteAndReadAsync(buffer).Wait();
@@ -137,9 +162,9 @@ namespace NZXTHUEAmbient
             buffer[3] = 0x00; // Unknown
             for (int i = 4; i <= 25; i = i + 3)
             {
-                buffer[i]       = colors[((i - 4) / 3) + 20].R; // R
-                buffer[i + 1]   = colors[((i - 4) / 3) + 20].G; // G
-                buffer[i + 2]   = colors[((i - 4) / 3) + 20].B; // B
+                buffer[i] = colors[((i - 4) / 3) + 20].G; // G
+                buffer[i + 1] = colors[((i - 4) / 3) + 20].R; // R
+                buffer[i + 2] = colors[((i - 4) / 3) + 20].B; // B
 
             }
             _device.InitializeAsync().Wait();
@@ -158,8 +183,8 @@ namespace NZXTHUEAmbient
             buffer[15] = 0x01; // Unknown
             _device.InitializeAsync().Wait();
             _device.WriteAndReadAsync(buffer).Wait();
-      
-          
+
+
             // Channel 2 subchannel 1 leds 26-45
             buffer = new byte[64];
             buffer[0] = 0x22; // Per led command
@@ -168,15 +193,21 @@ namespace NZXTHUEAmbient
             buffer[3] = 0x00; // Unknown
             for (int i = 4; i <= 61; i = i + 3)
             {
-                buffer[i]       = colors[((i - 4) / 3) + 20 + 8].R;     // R
-                buffer[i + 1]   = colors[((i - 4) / 3) + 20 + 8].G; // G
-                buffer[i + 2]   = colors[((i - 4) / 3) + 20 + 8].B; // B
+                /*
+                buffer[i] = colors[((i - 4) / 3) + 20 + 8].R;     // R
+                buffer[i + 1] = colors[((i - 4) / 3) + 20 + 8].G; // G
+                buffer[i + 2] = colors[((i - 4) / 3) + 20 + 8].B; // B
+                */
 
+                //inverted
+                buffer[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].G;     // G
+                buffer[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].R; // R
+                buffer[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].B; // B
             }
             _device.InitializeAsync().Wait();
             _device.WriteAndReadAsync(buffer).Wait();
 
-            // Channel 2 subchanel 2 leds 45-50
+            // Channel 2 subchanel 2 leds 45-50 
             buffer = new byte[64];
             buffer[0] = 0x22; // Per led command
             buffer[1] = 0x11; // Subchannel 2
@@ -184,11 +215,18 @@ namespace NZXTHUEAmbient
             buffer[3] = 0x00; // Unknown
             for (int i = 4; i <= 25; i = i + 3)
             {
-                buffer[i]       = colors[((i - 4) / 3) + 20 + 8 + 20].R;            // R
-                buffer[i + 1]   = colors[((i - 4) / 3) + 20 + 8 + 20].G;       // G
-                buffer[i + 2]   = colors[((i - 4) / 3) + 20 + 8 + 20].B;      // B
+                /*
+               buffer[i] = colors[((i - 4) / 3) + 20 + 8 + 20].R;            // R
+               buffer[i + 1] = colors[((i - 4) / 3) + 20 + 8 + 20].G;       // G
+               buffer[i + 2] = colors[((i - 4) / 3) + 20 + 8 + 20].B;      // B
+               */
+
+                //inverted
+                buffer[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].G;            // G
+                buffer[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].R;       // R
+                buffer[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)].B;      // B
             }
-             _device.InitializeAsync().Wait();
+            _device.InitializeAsync().Wait();
             _device.WriteAndReadAsync(buffer).Wait();
 
 
@@ -206,6 +244,7 @@ namespace NZXTHUEAmbient
             _device.InitializeAsync().Wait();
             _device.WriteAndReadAsync(buffer).Wait();
 
+            _currentSingleLedColor = colors;
         }
     }
 }

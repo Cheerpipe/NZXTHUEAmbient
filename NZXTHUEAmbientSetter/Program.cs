@@ -3,6 +3,7 @@ using NZXTHUEAmbient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,9 +11,12 @@ using System.Windows.Forms;
 
 namespace NZXTHUEAmbientSetter
 {
+    // For use with Aurora Project
+    // https://github.com/antonpup/Aurora or any other program using NamedPipes
+
     static class Program
     {
-        private static NZXTHUEAmbientDevice _device;
+        private static HUE2AmbientController controller = new HUE2AmbientController();
         private static Thread _setterThread;
         private static readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
         private static byte R = 0;
@@ -21,15 +25,7 @@ namespace NZXTHUEAmbientSetter
 
         static void Main()
         {
-            /*
-            int procCount = Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Length;
-            if (procCount > 1)
-                return;
-                */
-
-            _device = new NZXTHUEAmbientDevice();
-            _device.RegisterDeviceFactory();
-            _device.InitDeviceSync();
+            controller.InitDeviceSync(56); //I have 56 leds
             var pipeInterOp = new ArgsPipeInterOp();
 
             _setterThread = new Thread(DoSetter);
@@ -45,7 +41,7 @@ namespace NZXTHUEAmbientSetter
             while (_setterThread.IsAlive)
             {
                 _setterThreadEvent.WaitOne();
-                //_device.SetAllLedsSync(R, G, B);
+                controller.SetLedsSync(Color.FromArgb(R, G, B));
                 _setterThreadEvent.Reset();
             }
         }
