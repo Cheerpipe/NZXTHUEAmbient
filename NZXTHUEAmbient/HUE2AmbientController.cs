@@ -2,6 +2,7 @@
 using Hid.Net.Windows;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -20,7 +21,7 @@ namespace NZXTHUEAmbient
         private Color _currentAllLedsColor;
         private Color[] _currentLedsColor;
 
-        private int _totalLedCount;
+        private byte _totalLedCount;
         private IDevice _device;
 
         //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
@@ -43,7 +44,7 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        private async Task InitDevice(int totalLedCount)
+        private async Task InitDevice(byte totalLedCount)
         {
             WindowsHidDeviceFactory.Register(null, null);
             var deviceDefinitions = new List<FilterDeviceDefinition> { new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = 0x1E71, ProductId = 0x2002, Label = "NZXT HUE 2 Ambient" } };
@@ -65,10 +66,10 @@ namespace NZXTHUEAmbient
 
             _totalLedCount = totalLedCount;
             _currentLedsColor = new Color[_totalLedCount];
-            _device.InitializeAsync().Wait();
+            await _device.InitializeAsync();
         }
 
-        public void InitDeviceSync(int totalLedCount)
+        public void InitDeviceSync(byte totalLedCount)
         {
             InitDevice(totalLedCount).Wait(5000);
         }
@@ -98,10 +99,10 @@ namespace NZXTHUEAmbient
             buffer[12] = (byte)color.B; // B
 
             _currentAllLedsColor = color;
-            _ = await _device.WriteAndReadAsync(buffer);
+            await _device.WriteAsync(buffer);
 
             buffer[2] = 0x02; //Channel 2
-            _ = await _device.WriteAndReadAsync(buffer);
+            await _device.WriteAsync(buffer);
             _currentLedsColor = Enumerable.Repeat(color, _currentLedsColor.Length).ToArray(); //Refill current array with new color
         }
 
@@ -141,7 +142,7 @@ namespace NZXTHUEAmbient
             }
         }
 
-        public void TransactionSetLed(int led, Color color)
+        public void TransactionSetLed(byte led, Color color)
         {
             _transactionColors[led] = color;
         }
@@ -166,18 +167,17 @@ namespace NZXTHUEAmbient
             //TODO: Optimize and apply commands only if at least one led changed
             // Channel 1 subchannel 1 leds 0-19
             // Channel 1 subchannel 1 leds 0-19
-            var bufferC1S1 = new byte[64]; //Always 20 leds per command
+            byte[] bufferC1S1 = new byte[64]; //Always 20 leds per command
             bufferC1S1[0] = 0x22; // Per led command
             bufferC1S1[1] = 0x10; // Subchannel 1
             bufferC1S1[2] = 0x01; // Channel 1
             bufferC1S1[3] = 0x00; // Unknown
-
-            for (int i = 4; i <= 61; i = i + 3) //Fill entire array
-            {
-                bufferC1S1[i] = colors[(i - 4) / 3].G;      // G
-                bufferC1S1[i + 1] = colors[(i - 4) / 3].R;  // R
-                bufferC1S1[i + 2] = colors[(i - 4) / 3].B;  // B
-            }
+            Parallel.For(1, 61 / 3, i =>
+                  {
+                      bufferC1S1[(i * 3 + 1)] = colors[((i * 3 + 1) - 4) / 3].G;      // G
+                      bufferC1S1[(i * 3 + 1) + 1] = colors[((i * 3 + 1) - 4) / 3].R;  // R
+                      bufferC1S1[(i * 3 + 1) + 2] = colors[((i * 3 + 1) - 4) / 3].B;  // B
+                  });
 
             // Channel 1 subchannel 2 leds 20-24   
             var bufferC1S2 = new byte[64];
@@ -187,30 +187,15 @@ namespace NZXTHUEAmbient
                 bufferC1S2[1] = 0x11; // Subchannel 1
                 bufferC1S2[2] = 0x01; // Channel 1
                 bufferC1S2[3] = 0x00; // Unknown
-                for (int i = 4; i <= (_totalLedCount / 2 - 20) * 3 + 1; i = i + 3) //Fill the remaining array
+                Parallel.For(1, ((_totalLedCount / 2 - 20) * 3 + 1) / 3, i =>
                 {
-                    //((i - 4) / 3) + 20 => (i + 56) / 3
-                    bufferC1S2[i] = colors[(i + 56) / 3].G; // G
-                    bufferC1S2[i + 1] = colors[(i + 56) / 3].R; // R
-                    bufferC1S2[i + 2] = colors[(i + 56) / 3].B; // B
-                }
-            }
-            //Create command finalizer for channel 1
-            var bufferC1F = new byte[64];
-            bufferC1F = new byte[64];
-            bufferC1F[0] = 0x22; // Per led command
-            bufferC1F[1] = 0xa0; // unknown
-            bufferC1F[2] = 0x01; // Channel 1
-            bufferC1F[3] = 0x00; // Unknown
-            bufferC1F[4] = 0x01; // Unknown
-            bufferC1F[7] = 0x1c; // Unknown
-            bufferC1F[10] = 0x80; // Unknown
-            bufferC1F[12] = 0x32; // Unknown
-            bufferC1F[15] = 0x01; // Unknown
+                    bufferC1S2[(i*3+1)] = colors[((i * 3 + 1) + 56) / 3].G; // G
+                    bufferC1S2[(i * 3 + 1) + 1] = colors[((i * 3 + 1) + 56) / 3].R; // R
+                    bufferC1S2[(i * 3 + 1) + 2] = colors[((i * 3 + 1) + 56) / 3].B; // B
+                });
 
-            _ = await _device.WriteAndReadAsync(bufferC1S1);
-            _ = await _device.WriteAndReadAsync(bufferC1S2);
-            _ = await _device.WriteAndReadAsync(bufferC1F);
+
+            }
 
             // Channel 2 subchannel 1 leds 26-45
             var bufferC2S1 = new byte[64];
@@ -218,12 +203,12 @@ namespace NZXTHUEAmbient
             bufferC2S1[1] = 0x10; // Subchannel 1
             bufferC2S1[2] = 0x02; // Channel 2
             bufferC2S1[3] = 0x00; // Unknown
-            for (int i = 4; i <= 61; i = i + 3)
-            { //(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8) = (colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)
-                bufferC2S1[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8)].G;     // G
-                bufferC2S1[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)].R; // R
-                bufferC2S1[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 28)].B; // B
-            }
+            Parallel.For(1, 61 / 3, i =>
+             {
+                 bufferC2S1[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 20 + 8)].G;     // G
+                 bufferC2S1[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 28)].R; // R
+                 bufferC2S1[(i * 3 + 1) + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 28)].B; // B
+             });
 
             // Channel 2 subchanel 2 leds 45-50 
             var bufferC2S2 = new byte[64];
@@ -233,29 +218,36 @@ namespace NZXTHUEAmbient
                 bufferC2S2[1] = 0x11; // Subchannel 2
                 bufferC2S2[2] = 0x02; // Channel 2
                 bufferC2S2[3] = 0x00; // Unknown
-                for (int i = 4; i <= (_totalLedCount / 2 - 20) * 3 + 1; i = i + 3)
-                { //(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 20 + 8 + 20)
-                    bufferC2S2[i] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].G;            // G
-                    bufferC2S2[i + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].R;       // R
-                    bufferC2S2[i + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - (((i - 4) / 3) + 48)].B;      // B
-                }
+                Parallel.For(1, ((_totalLedCount / 2 - 20) * 3 + 1) / 3, i =>
+                 {
+                     bufferC2S2[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].G;            // G
+                     bufferC2S2[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].R;       // R
+                     bufferC2S2[(i * 3 + 1) + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].B;      // B
+                 });
             }
 
             //Create command finalizer for channel 2
-            var bufferC2F = new byte[64];
-            bufferC2F[0] = 0x22; // Per led command
-            bufferC2F[1] = 0xa0; // unknown
-            bufferC2F[2] = 0x02; // Channel 2
-            bufferC2F[3] = 0x00; // Unknown
-            bufferC2F[4] = 0x01; // Unknown
-            bufferC2F[7] = 0x1c; // Unknown
-            bufferC2F[10] = 0x80; // Unknown
-            bufferC2F[12] = 0x32; // Unknown
-            bufferC2F[15] = 0x01; // Unknown
+            var bufferAC2F = new byte[64];
+            bufferAC2F[0] = 0x22; // Per led command
+            bufferAC2F[1] = 0xa0; // unknown
+            bufferAC2F[2] = 0x03; // Channel 1 = 0x01 Channel 2 = 0x02 channel 0x03
+            bufferAC2F[3] = 0x00; // Unknown
+            bufferAC2F[4] = 0x01; // Unknown
+            bufferAC2F[7] = 0x1c; // Unknown
+            bufferAC2F[10] = 0x80; // Unknown
+            bufferAC2F[12] = 0x32; // Unknown
+            bufferAC2F[15] = 0x01; // Unknown
 
-            _ = await _device.WriteAndReadAsync(bufferC2S1);
-            _ = await _device.WriteAndReadAsync(bufferC2S2);
-            _ = await _device.WriteAndReadAsync(bufferC2F);
+            //Set channel 1 subchannel 1 and 2
+            await _device.WriteAsync(bufferC1S1);
+            await _device.WriteAsync(bufferC1S2);
+
+            //Set channel 2 subchannel 1 and 2
+            await _device.WriteAsync(bufferC2S1);
+            await _device.WriteAsync(bufferC2S2);
+
+            //Apply changes
+            await _device.WriteAsync(bufferAC2F);
             _currentLedsColor = colors;
         }
     }

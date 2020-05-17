@@ -93,7 +93,7 @@ namespace NZXTHUEAmbientSetter
                 R = Convert.ToByte(args[0]);
                 G = Convert.ToByte(args[1]);
                 B = Convert.ToByte(args[2]);
-                int led = Convert.ToInt32(args[3]);
+                byte led = Convert.ToByte(args[3]);
                 controller.TransactionSetLed(led, Color.FromArgb(R, G, B));
                 Debug.WriteLine("TRX on led {0}: {1} {2} {3}", led, R, G, B);
             }

@@ -12,8 +12,13 @@ namespace NZXTHUEAmbient
             int totalLeds = 56; //28 per channel
             controller.InitDeviceSync(56);
 
+            LoopExample(56);
+            return;
+
+
+
             controller.TransactionStart(1000);
-            for (int i=0;i< totalLeds;i++)
+            for (byte i =0;i< totalLeds;i++)
             {
                 controller.TransactionSetLed(i,Color.FromArgb(255,255,255));
             }
@@ -93,10 +98,10 @@ namespace NZXTHUEAmbient
             Color top = Color.FromArgb(255, 0, 0);
             Color bottom = Color.FromArgb(0, 0, 255);
             controller.TransactionStart();
-            for (int i = 10; i <= 27; i++)
+            for (byte i = 10; i <= 27; i++)
                 controller.TransactionSetLed(i, top);
 
-            for (int i = 38; i <= 55; i++)
+            for (byte i = 38; i <= 55; i++)
                 controller.TransactionSetLed(i, bottom);
             controller.TransactionCommit();
         }
@@ -123,7 +128,7 @@ namespace NZXTHUEAmbient
 
         private static void LoopExample(int totalLeds)
         {
-            for (int j = 0; j <= 5; j++) // 3 loops
+            for (int j = 0; j <= 50; j++)
             {
                 Color[] newColors = new Color[totalLeds];
                 for (int i = 0; i < newColors.Length; i++)
