@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System;
 using System.Threading;
+using System.Diagnostics;
 
 namespace NZXTHUEAmbient
 {
@@ -12,15 +13,14 @@ namespace NZXTHUEAmbient
             int totalLeds = 56; //28 per channel
             controller.InitDeviceSync(56);
 
-            LoopExample(56);
-            return;
 
-
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             controller.TransactionStart(1000);
-            for (byte i =0;i< totalLeds;i++)
+            for (byte i = 0; i < totalLeds; i++)
             {
-                controller.TransactionSetLed(i,Color.FromArgb(255,255,255));
+                controller.TransactionSetLed(i, Color.FromArgb(255, 255, 255));
             }
             controller.TransactionCommit();
 
@@ -67,6 +67,8 @@ namespace NZXTHUEAmbient
             TransactionExample3(totalLeds);
             Thread.Sleep(500);
             LoopExample(totalLeds);
+            stopwatch.Stop();
+            long elapsed_time = stopwatch.ElapsedMilliseconds;
         }
 
         private static void AllExample(Color color)
@@ -128,7 +130,7 @@ namespace NZXTHUEAmbient
 
         private static void LoopExample(int totalLeds)
         {
-            for (int j = 0; j <= 50; j++)
+            for (int j = 0; j <= 100; j++)
             {
                 Color[] newColors = new Color[totalLeds];
                 for (int i = 0; i < newColors.Length; i++)

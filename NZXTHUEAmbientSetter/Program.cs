@@ -23,6 +23,7 @@ namespace NZXTHUEAmbientSetter
         private static byte R = 0;
         private static byte G = 0;
         private static byte B = 0;
+        private static bool _shutingDown = false;
 
         static void Main()
         {
@@ -55,12 +56,15 @@ namespace NZXTHUEAmbientSetter
 
         public static void Run(string[] args)
         {
+            if (_shutingDown)
+                return;
             //TODO: implement propper command parser
             if (args.Length == 1)
             {
                 switch (args[0])
                 {
                     case "shutdown":
+                        _shutingDown = true;
                         ArgsPipeInterOp.StopListening = true;
                         R = 0;
                         G = 0;
