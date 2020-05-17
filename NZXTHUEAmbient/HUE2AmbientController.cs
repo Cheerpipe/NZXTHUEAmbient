@@ -11,15 +11,38 @@ namespace NZXTHUEAmbient
 {
     public class HUE2AmbientController
     {
+
+
         private bool _transactionStarted = false;
         private Color[] _transactionColors;
+        private Timer _transactionMaxAliveTimer;
+
         private Color _currentAllLedsColor;
         private Color[] _currentLedsColor;
+
         private int _totalLedCount;
         private IDevice _device;
 
         //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
         //Todo: Functions to set easily corners (lefttop, righttop, leftbottom, rightbottom) and sides (up, down, left, right)
+
+        public HUE2AmbientController()
+        {
+            _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
+        }
+
+        private void _transactionTimeoutTimer_Tick(object state)
+        {
+            _transactionMaxAliveTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            if (!_transactionStarted) return;
+            TransactionCancel();
+        }
+
+        public void TransactionCancel()
+        {
+            _transactionStarted = false;
+        }
+
         private async Task InitDevice(int totalLedCount)
         {
             WindowsHidDeviceFactory.Register(null, null);
@@ -75,10 +98,10 @@ namespace NZXTHUEAmbient
             buffer[12] = (byte)color.B; // B
 
             _currentAllLedsColor = color;
-            _device.WriteAndReadAsync(buffer).Wait();
+            _ = await _device.WriteAndReadAsync(buffer);
 
             buffer[2] = 0x02; //Channel 2
-            _device.WriteAndReadAsync(buffer).Wait();
+            _ = await _device.WriteAndReadAsync(buffer);
             _currentLedsColor = Enumerable.Repeat(color, _currentLedsColor.Length).ToArray(); //Refill current array with new color
         }
 
@@ -108,24 +131,25 @@ namespace NZXTHUEAmbient
             SetLeds(colors).Wait(100);
         }
 
-        public void TransactionStart()
+        public void TransactionStart(int transactionTimeout = Timeout.Infinite)
         {
             _transactionStarted = true;
             _transactionColors = (Color[])_currentLedsColor.Clone();
+            if (transactionTimeout > 0)
+            {
+                _transactionMaxAliveTimer.Change(transactionTimeout, transactionTimeout);
+            }
         }
 
         public void TransactionSetLed(int led, Color color)
         {
-            if (!_transactionStarted)
-                throw new Exception("Transaction not started");
-
             _transactionColors[led] = color;
         }
 
         public void TransactionCommit()
         {
             if (!_transactionStarted)
-                throw new Exception("Transaction not started");
+                return;
             SetLedsSync(_transactionColors);
             _transactionStarted = false;
         }
@@ -184,9 +208,9 @@ namespace NZXTHUEAmbient
             bufferC1F[12] = 0x32; // Unknown
             bufferC1F[15] = 0x01; // Unknown
 
-            await  _device.WriteAndReadAsync(bufferC1S1);
-            await _device.WriteAndReadAsync(bufferC1S2);
-            await _device.WriteAndReadAsync(bufferC1F);
+            _ = await _device.WriteAndReadAsync(bufferC1S1);
+            _ = await _device.WriteAndReadAsync(bufferC1S2);
+            _ = await _device.WriteAndReadAsync(bufferC1F);
 
             // Channel 2 subchannel 1 leds 26-45
             var bufferC2S1 = new byte[64];
@@ -229,10 +253,9 @@ namespace NZXTHUEAmbient
             bufferC2F[12] = 0x32; // Unknown
             bufferC2F[15] = 0x01; // Unknown
 
-            await _device.WriteAndReadAsync(bufferC2S1);
-            await _device.WriteAndReadAsync(bufferC2S2);
-            await _device.WriteAndReadAsync(bufferC2F);
-
+            _ = await _device.WriteAndReadAsync(bufferC2S1);
+            _ = await _device.WriteAndReadAsync(bufferC2S2);
+            _ = await _device.WriteAndReadAsync(bufferC2F);
             _currentLedsColor = colors;
         }
     }

@@ -12,6 +12,13 @@ namespace NZXTHUEAmbient
             int totalLeds = 56; //28 per channel
             controller.InitDeviceSync(56);
 
+            controller.TransactionStart(1000);
+            for (int i=0;i< totalLeds;i++)
+            {
+                controller.TransactionSetLed(i,Color.FromArgb(255,255,255));
+            }
+            controller.TransactionCommit();
+
 
             /*
             My Setup 10 x 18 
@@ -69,7 +76,7 @@ namespace NZXTHUEAmbient
             Color corner2 = Color.FromArgb(0, 0255, 0);
             Color corner3 = Color.FromArgb(0, 0, 255);
             Color corner4 = Color.FromArgb(255, 0255, 255);
-            controller.TransactionStart();
+            controller.TransactionStart(1000);
             controller.TransactionSetLed(0, corner1);
             controller.TransactionSetLed(55, corner1);
             controller.TransactionSetLed(9, corner2);

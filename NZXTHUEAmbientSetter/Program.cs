@@ -55,6 +55,7 @@ namespace NZXTHUEAmbientSetter
 
         public static void Run(string[] args)
         {
+            //TODO: implement propper command parser
             if (args.Length == 1)
             {
                 switch (args[0])
@@ -68,6 +69,14 @@ namespace NZXTHUEAmbientSetter
                         Thread.Sleep(1000);
                         _setterThread.Abort();
                         break;
+                    case "transactionstart":
+                        controller.TransactionStart(1000);
+                        Debug.WriteLine("TRX start");
+                        break;
+                    case "transactioncommit":
+                        controller.TransactionCommit();
+                        Debug.WriteLine("TRX commit");
+                        break;
                 }
             }
             else if (args.Length == 3)
@@ -76,6 +85,17 @@ namespace NZXTHUEAmbientSetter
                 G = Convert.ToByte(args[1]);
                 B = Convert.ToByte(args[2]);
                 _setterThreadEvent.Set();
+                Debug.WriteLine("Setled");
+            }
+            else if (args.Length == 4)
+            {
+                Debug.WriteLine("Args:  {0}", args.ToString());
+                R = Convert.ToByte(args[0]);
+                G = Convert.ToByte(args[1]);
+                B = Convert.ToByte(args[2]);
+                int led = Convert.ToInt32(args[3]);
+                controller.TransactionSetLed(led, Color.FromArgb(R, G, B));
+                Debug.WriteLine("TRX on led {0}: {1} {2} {3}", led, R, G, B);
             }
             else
             {
