@@ -22,23 +22,24 @@ namespace NZXTHUEAmbient
         private byte _totalLedCount;
         private IDevice _device;
 
-        private int _channel1LedCount;
-        private int _channel2LedCount;
+        private byte _channel1LedCount;
+        private byte _channel2LedCount;
 
         //TODO: Autodetected and readonly.Seteable only for now
-        public int Channel1LedCount { get => _channel1LedCount; set => _channel1LedCount = value; }
-        public int Channel2LedCount { get => _channel2LedCount; set => _channel2LedCount = value; }
+        public byte Channel1LedCount { get => _channel1LedCount; set => _channel1LedCount = value; }
+        public byte Channel2LedCount { get => _channel2LedCount; set => _channel2LedCount = value; }
+        public byte TotalLedCount { get => _totalLedCount; set => _totalLedCount = value; }
 
         //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
 
         public HUE2AmbientDeviceController(IDevice device)
         {
             //TODO: This number must be detected
-            _totalLedCount = 56;
             _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
-            _currentLedsColor = new Color[_totalLedCount];
             _device = device;
             _device.InitializeAsync().Wait();
+            DetectLedCount().Wait();
+            _currentLedsColor = new Color[_totalLedCount];
         }
 
         private void _transactionTimeoutTimer_Tick(object state)
@@ -53,30 +54,6 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        /*
-        private async Task InitDevices(byte totalLedCount, int deviceIndex)
-        {
-            WindowsHidDeviceFactory.Register(null, null);
-            var deviceDefinitions = new List<FilterDeviceDefinition> { new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = 0x1E71, ProductId = 0x2002, Label = "NZXT HUE 2 Ambient" } };
-            List<IDevice> devices = await DeviceManager.Current.GetDevicesAsync(deviceDefinitions);
-            _devices = devices.ToArray();
-
-            if (_devices.Length < 0)
-            {
-                throw new Exception("No device detected");
-            }
-
-            _totalLedCount = totalLedCount;
-            _currentLedsColor = new Color[_totalLedCount];
-            await _device.InitializeAsync();
-        }
-        */
-        /*
-        public void InitDeviceSync(byte totalLedCount)
-        {
-            InitDevices(totalLedCount, 0).Wait(5000);
-        }
-        */
         public async Task SetLeds(Color color)
         {
             if (_currentAllLedsColor == color)
@@ -152,6 +129,40 @@ namespace NZXTHUEAmbient
             _transactionColors[led] = color;
         }
 
+        private async Task DetectLedCount()
+        {
+            // 0x04 = 10 led strip
+            // 0x05 = 8 led strip
+            //TODO Move this to a better place
+            Dictionary<byte, byte> _stripLenghts = new System.Collections.Generic.Dictionary<byte, byte>();
+            _stripLenghts.Add(0x00, 0);
+            _stripLenghts.Add(0x04, 10);
+            _stripLenghts.Add(0x05, 8);
+
+            byte[] request = new byte[64];
+            request[0] = 0x20;
+            request[1] = 0x03;
+            request[2] = 0x00;
+            byte[] response = await _device.WriteAndReadAsync(request);
+
+            _channel1LedCount = (byte)(
+               _stripLenghts[response[15]] +
+               _stripLenghts[response[16]] +
+               _stripLenghts[response[17]] +
+               _stripLenghts[response[18]] +
+               _stripLenghts[response[19]] +
+               _stripLenghts[response[20]]);
+
+            _channel2LedCount = (byte)(
+               _stripLenghts[response[21]] +
+               _stripLenghts[response[22]] +
+               _stripLenghts[response[23]] +
+               _stripLenghts[response[24]] +
+               _stripLenghts[response[25]] +
+               _stripLenghts[response[26]]);
+            TotalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
+        }
+
         public void TransactionCommit()
         {
             if (!_transactionStarted)
@@ -184,7 +195,7 @@ namespace NZXTHUEAmbient
 
             // Channel 1 subchannel 2 leds 20-24   
             var bufferC1S2 = new byte[64];
-            if (_totalLedCount > 40) // 20 is the max capacity per command. If we have more leds, we need second part command
+            if (TotalLedCount > 40) // 20 is the max capacity per command. If we have more leds, we need second part command
             {
                 bufferC1S2[0] = 0x24; // Per led command
                 bufferC1S2[1] = 0x05; // Subchannel 1
@@ -213,7 +224,7 @@ namespace NZXTHUEAmbient
 
             // Channel 2 subchanel 2 leds 45-50 
             var bufferC2S2 = new byte[64];
-            if (_totalLedCount > 40) // 20 is the max capacity per command. If we have more than 40 leds we have mor than 20 leds per chanel so we need second part command
+            if (TotalLedCount > 40) // 20 is the max capacity per command. If we have more than 40 leds we have mor than 20 leds per chanel so we need second part command
             {
                 bufferC2S2[0] = 0x24; // Per led command
                 bufferC2S2[1] = 0x05; // Subchannel 2

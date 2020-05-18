@@ -12,33 +12,37 @@ namespace NZXTHUEAmbient
         static void Main(string[] args)
         {
 
-                        /*
-            My Setup 10 x 18 
-            
-                10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
-            9                                                       28
-            8                                                       29                                                     
-            7                                                       30
-            6                                                       31
-            5                                                       32
-            4                                                       33
-            3                                                       34
-            2                                                       35
-            1                                                       36 
-            0                                                       37
-                55 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 
-            */
+            /*
+My Setup 10 x 18 
+
+    10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
+9                                                       28
+8                                                       29                                                     
+7                                                       30
+6                                                       31
+5                                                       32
+4                                                       33
+3                                                       34
+2                                                       35
+1                                                       36 
+0                                                       37
+    55 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 
+*/
 
 
-            int totalLeds = 56; //28 per channel
+
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
+            int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
+            /*
             HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart(100);
             for (byte i = 0; i < totalLeds; i++)
             {
                 HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(i, Color.FromArgb(255, 255, 255));
             }
+            
             HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
+            */
             AllExample(Color.FromArgb(255, 0, 0));
             Thread.Sleep(500);
             AllExample(Color.FromArgb(0, 255, 0));
