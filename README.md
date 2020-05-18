@@ -1,5 +1,5 @@
 # NZXTHUEAmbient (WIP)
-NZXT Controller for HUE 2 Ambient.
+.NET Controller for NZXT HUE 2 Ambient.
 
 https://www.nzxt.com/products/hue-2-ambient-v2
 
