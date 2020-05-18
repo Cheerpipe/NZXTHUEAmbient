@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 
 // La información general de un ensamblado se controla mediante el siguiente 
 // conjunto de atributos. Cambie estos valores de atributo para modificar la información
-// asociada con un ensamblado.
-[assembly: AssemblyTitle("NZXTHUEAmbientSetter")]
+// asociada a un ensamblado.
+[assembly: AssemblyTitle("NZXTHUEAmbientTest")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("NZXTHUEAmbientSetter")]
+[assembly: AssemblyProduct("NZXTHUEAmbientTest")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // El siguiente GUID sirve como id. de typelib si este proyecto se expone a COM.
-[assembly: Guid("5593c5ad-aec0-405e-86cc-3d9d64edcf8b")]
+[assembly: Guid("b260f612-cd10-4c84-871d-5076a2492ac8")]
 
 // La información de versión de un ensamblado consta de los cuatro valores siguientes:
 //

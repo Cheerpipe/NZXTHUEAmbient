@@ -21,9 +21,9 @@ public class NZXTHUEAmbient
         try
         {
 			KillProcessByName("NZXT CAM.exe");
-			KillProcessByName("NZXTHUEAmbientSetter.exe");
+			KillProcessByName("NZXTHUEAmbientAurora.exe");
 			Thread.Sleep(100);
-			Process.Start(@"D:\Warez\Utiles\NZXTHUEAmbientSetter\NZXTHUEAmbientSetter.exe");
+			Process.Start(@"D:\Warez\Utiles\NZXTHUEAmbientSetter\NZXTHUEAmbientAurora.exe.exe");
             return true;
         }
         catch(Exception exc)
