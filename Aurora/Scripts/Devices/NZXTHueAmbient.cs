@@ -60,8 +60,8 @@ public class NZXTHUEAmbient
     
     public void Shutdown()
     {
-		//SendColorToDevice(Color.FromArgb(0,0,0), true); //Should not be necessary
 		SendArgs(new string[] { "shutdown" });
+		Thread.Sleep(5000);		
     }
     
     public bool UpdateDevice(Dictionary<DeviceKeys, Color> keyColors, bool forced)

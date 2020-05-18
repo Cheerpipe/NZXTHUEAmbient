@@ -19,6 +19,7 @@ namespace NZXTHUEAmbientSetter
     {
         private static Thread _setterThread;
         private static readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
+        private static HUE2AmbientDeviceController _deviceController;
         private static byte R = 0;
         private static byte G = 0;
         private static byte B = 0;
@@ -27,6 +28,8 @@ namespace NZXTHUEAmbientSetter
         static void Main()
         {
             HUE2AmbientDeviceLoader.InitDevices().Wait();
+            _deviceController = HUE2AmbientDeviceLoader.Devices.FirstOrDefault();
+
             if (HUE2AmbientDeviceLoader.Devices.Length == 0)
             {
                 throw new Exception("No HUE 2 Ambiente devices found");
@@ -52,7 +55,7 @@ namespace NZXTHUEAmbientSetter
             while (_setterThread.IsAlive)
             {
                 _setterThreadEvent.WaitOne();
-                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLedsSync(Color.FromArgb(R, G, B));
+                _deviceController.SetLedsSync(Color.FromArgb(R, G, B));
                 _setterThreadEvent.Reset();
             }
         }
@@ -62,10 +65,32 @@ namespace NZXTHUEAmbientSetter
             if (_shutingDown)
                 return;
             //TODO: implement propper command parser
-            if (args.Length == 1)
+            //TODO: allow arrays as command params to reduce pipe call ammount.
+            if (args.Length == 4)
+            {
+                R = Convert.ToByte(args[0]);
+                G = Convert.ToByte(args[1]);
+                B = Convert.ToByte(args[2]);
+                byte led = Convert.ToByte(args[3]);
+                _deviceController.TransactionSetLed(led, Color.FromArgb(R, G, B));
+            }
+            else if (args.Length == 3)
+            {
+                R = Convert.ToByte(args[0]);
+                G = Convert.ToByte(args[1]);
+                B = Convert.ToByte(args[2]);
+                _setterThreadEvent.Set();
+            }
+            else if (args.Length == 1)
             {
                 switch (args[0])
                 {
+                    case "transactionstart":
+                        _deviceController.TransactionStart(1000);
+                        break;
+                    case "transactioncommit":
+                        _deviceController.TransactionCommit();
+                        break;
                     case "shutdown":
                         _shutingDown = true;
                         ArgsPipeInterOp.StopListening = true;
@@ -76,37 +101,7 @@ namespace NZXTHUEAmbientSetter
                         Thread.Sleep(1000);
                         _setterThread.Abort();
                         break;
-                    case "transactionstart":
-                        HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart(1000);
-                        Debug.WriteLine("TRX start");
-                        break;
-                    case "transactioncommit":
-                        HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
-                        Debug.WriteLine("TRX commit");
-                        break;
                 }
-            }
-            else if (args.Length == 3)
-            {
-                R = Convert.ToByte(args[0]);
-                G = Convert.ToByte(args[1]);
-                B = Convert.ToByte(args[2]);
-                _setterThreadEvent.Set();
-                Debug.WriteLine("Setled");
-            }
-            else if (args.Length == 4)
-            {
-                Debug.WriteLine("Args:  {0}", args.ToString());
-                R = Convert.ToByte(args[0]);
-                G = Convert.ToByte(args[1]);
-                B = Convert.ToByte(args[2]);
-                byte led = Convert.ToByte(args[3]);
-                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(led, Color.FromArgb(R, G, B));
-                Debug.WriteLine("TRX on led {0}: {1} {2} {3}", led, R, G, B);
-            }
-            else
-            {
-                //do nothing
             }
         }
     }
