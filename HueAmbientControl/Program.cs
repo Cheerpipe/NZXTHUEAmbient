@@ -34,15 +34,7 @@ My Setup 10 x 18
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
             int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
-            /*
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart(100);
-            for (byte i = 0; i < totalLeds; i++)
-            {
-                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(i, Color.FromArgb(255, 255, 255));
-            }
-            
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
-            */
+
             AllExample(Color.FromArgb(255, 0, 0));
             Thread.Sleep(500);
             AllExample(Color.FromArgb(0, 255, 0));

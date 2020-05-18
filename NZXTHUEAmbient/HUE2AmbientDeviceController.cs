@@ -25,16 +25,12 @@ namespace NZXTHUEAmbient
         private byte _channel1LedCount;
         private byte _channel2LedCount;
 
-        //TODO: Autodetected and readonly.Seteable only for now
-        public byte Channel1LedCount { get => _channel1LedCount; set => _channel1LedCount = value; }
-        public byte Channel2LedCount { get => _channel2LedCount; set => _channel2LedCount = value; }
-        public byte TotalLedCount { get => _totalLedCount; set => _totalLedCount = value; }
-
-        //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
-
+        public byte Channel1LedCount { get => _channel1LedCount; }
+        public byte Channel2LedCount { get => _channel2LedCount; }
+        public byte TotalLedCount { get => _totalLedCount; }
+        
         public HUE2AmbientDeviceController(IDevice device)
         {
-            //TODO: This number must be detected
             _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
             _device = device;
             _device.InitializeAsync().Wait();
@@ -160,7 +156,7 @@ namespace NZXTHUEAmbient
                _stripLenghts[response[24]] +
                _stripLenghts[response[25]] +
                _stripLenghts[response[26]]);
-            TotalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
+            _totalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
         }
 
         public void TransactionCommit()
@@ -171,7 +167,6 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        //TODO: Allow non symetrical arrays. For now, it will only work with symetrical channels
         public async Task SetLeds(Color[] colors)
         {
             if (_device == null)
@@ -186,7 +181,8 @@ namespace NZXTHUEAmbient
             bufferC1S1[1] = 0x04; // Subchannel 1
             bufferC1S1[2] = 0x01; // Channel 1
             bufferC1S1[3] = 0x00; // Unknown
-            Parallel.For(1, 21, i =>
+            int c1s1MaxLenght = Channel1LedCount > 20 ? 21 : Channel1LedCount + 1;
+            Parallel.For(1, c1s1MaxLenght, i =>
                    {
                        bufferC1S1[(i * 3 + 1)] = colors[((i * 3 + 1) - 4) / 3].G;      // G
                        bufferC1S1[(i * 3 + 1) + 1] = colors[((i * 3 + 1) - 4) / 3].R;  // R
@@ -201,7 +197,8 @@ namespace NZXTHUEAmbient
                 bufferC1S2[1] = 0x05; // Subchannel 1
                 bufferC1S2[2] = 0x01; // Channel 1
                 bufferC1S2[3] = 0x01; // Unknown
-                Parallel.For(1, 11, i =>
+                int c1s2MaxLenght = _channel1LedCount - 20 + 1;
+                Parallel.For(1, c1s2MaxLenght, i =>
                  {
                      bufferC1S2[(i * 3 + 1)] = colors[((i * 3 + 1) + 56) / 3].G; // G
                      bufferC1S2[(i * 3 + 1) + 1] = colors[((i * 3 + 1) + 56) / 3].R; // R
@@ -215,7 +212,8 @@ namespace NZXTHUEAmbient
             bufferC2S1[1] = 0x04; // Subchannel 1
             bufferC2S1[2] = 0x02; // Channel 2
             bufferC2S1[3] = 0x00; // Unknown
-            Parallel.For(1, 21, i =>
+            int c2s1MaxLenght = Channel2LedCount > 20 ? 21 : Channel2LedCount + 1;
+            Parallel.For(1, c2s1MaxLenght, i =>
              {
                  bufferC2S1[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 20 + 8)].G;     // G
                  bufferC2S1[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 28)].R; // R
@@ -230,7 +228,8 @@ namespace NZXTHUEAmbient
                 bufferC2S2[1] = 0x05; // Subchannel 2
                 bufferC2S2[2] = 0x02; // Channel 2
                 bufferC2S2[3] = 0x02; // Unknown
-                Parallel.For(1, 11, i =>
+                int c2s2MaxLenght = _channel2LedCount - 20 + 1;
+                Parallel.For(1, c2s2MaxLenght, i =>
                  {
                      bufferC2S2[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].G;            // G
                      bufferC2S2[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].R;       // R
