@@ -54,7 +54,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HUE2AmbientController.cs" />
+    <Compile Include="HUE2AmbientDeviceController.cs" />
+    <Compile Include="HUE2AmbientDeviceLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

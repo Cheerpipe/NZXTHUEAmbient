@@ -17,7 +17,6 @@ namespace NZXTHUEAmbientSetter
 
     static class Program
     {
-        private static HUE2AmbientController controller = new HUE2AmbientController();
         private static Thread _setterThread;
         private static readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
         private static byte R = 0;
@@ -27,14 +26,15 @@ namespace NZXTHUEAmbientSetter
 
         static void Main()
         {
+            HUE2AmbientDeviceLoader.InitDevices().Wait();
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
-            controller.InitDeviceSync(56); //I have 56 leds
+            //_controller.InitDeviceSync(56); //I have 56 leds
             var pipeInterOp = new ArgsPipeInterOp();
 
             _setterThread = new Thread(DoSetter);
             _setterThread.SetApartmentState(ApartmentState.STA);
             _setterThread.Start();
-            pipeInterOp.StartArgsPipeServer();
+            pipeInterOp.StartArgsPipeServer("NZXTHUEAmbientSetter");
             _setterThread.Join();
 
         }
@@ -49,7 +49,7 @@ namespace NZXTHUEAmbientSetter
             while (_setterThread.IsAlive)
             {
                 _setterThreadEvent.WaitOne();
-                controller.SetLedsSync(Color.FromArgb(R, G, B));
+                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLedsSync(Color.FromArgb(R, G, B));
                 _setterThreadEvent.Reset();
             }
         }
@@ -74,11 +74,11 @@ namespace NZXTHUEAmbientSetter
                         _setterThread.Abort();
                         break;
                     case "transactionstart":
-                        controller.TransactionStart(1000);
+                        HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart(1000);
                         Debug.WriteLine("TRX start");
                         break;
                     case "transactioncommit":
-                        controller.TransactionCommit();
+                        HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
                         Debug.WriteLine("TRX commit");
                         break;
                 }
@@ -98,7 +98,7 @@ namespace NZXTHUEAmbientSetter
                 G = Convert.ToByte(args[1]);
                 B = Convert.ToByte(args[2]);
                 byte led = Convert.ToByte(args[3]);
-                controller.TransactionSetLed(led, Color.FromArgb(R, G, B));
+                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(led, Color.FromArgb(R, G, B));
                 Debug.WriteLine("TRX on led {0}: {1} {2} {3}", led, R, G, B);
             }
             else

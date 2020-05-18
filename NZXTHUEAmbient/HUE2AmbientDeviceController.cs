@@ -10,10 +10,8 @@ using System.Threading.Tasks;
 
 namespace NZXTHUEAmbient
 {
-    public class HUE2AmbientController
+    public class HUE2AmbientDeviceController
     {
-
-
         private bool _transactionStarted = false;
         private Color[] _transactionColors;
         private Timer _transactionMaxAliveTimer;
@@ -24,12 +22,23 @@ namespace NZXTHUEAmbient
         private byte _totalLedCount;
         private IDevice _device;
 
-        //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
-        //Todo: Functions to set easily corners (lefttop, righttop, leftbottom, rightbottom) and sides (up, down, left, right)
+        private int _channel1LedCount;
+        private int _channel2LedCount;
 
-        public HUE2AmbientController()
+        //TODO: Autodetected and readonly.Seteable only for now
+        public int Channel1LedCount { get => _channel1LedCount; set => _channel1LedCount = value; }
+        public int Channel2LedCount { get => _channel2LedCount; set => _channel2LedCount = value; }
+
+        //Todo: Allow multiple controllers and detect channel 1 and 2 array lenght
+
+        public HUE2AmbientDeviceController(IDevice device)
         {
+            //TODO: This number must be detected
+            _totalLedCount = 56;
             _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
+            _currentLedsColor = new Color[_totalLedCount];
+            _device = device;
+            _device.InitializeAsync().Wait();
         }
 
         private void _transactionTimeoutTimer_Tick(object state)
@@ -44,22 +53,15 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        private async Task InitDevice(byte totalLedCount)
+        /*
+        private async Task InitDevices(byte totalLedCount, int deviceIndex)
         {
             WindowsHidDeviceFactory.Register(null, null);
             var deviceDefinitions = new List<FilterDeviceDefinition> { new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = 0x1E71, ProductId = 0x2002, Label = "NZXT HUE 2 Ambient" } };
-            var devices = await DeviceManager.Current.GetDevicesAsync(deviceDefinitions);
-            do
-            {
-                Thread.Sleep(50);
-            } while (devices.Count == 0);
+            List<IDevice> devices = await DeviceManager.Current.GetDevicesAsync(deviceDefinitions);
+            _devices = devices.ToArray();
 
-
-            if (devices.Count > 0)
-            {
-                _device = devices.First();
-            }
-            else
+            if (_devices.Length < 0)
             {
                 throw new Exception("No device detected");
             }
@@ -68,12 +70,13 @@ namespace NZXTHUEAmbient
             _currentLedsColor = new Color[_totalLedCount];
             await _device.InitializeAsync();
         }
-
+        */
+        /*
         public void InitDeviceSync(byte totalLedCount)
         {
-            InitDevice(totalLedCount).Wait(5000);
+            InitDevices(totalLedCount, 0).Wait(5000);
         }
-
+        */
         public async Task SetLeds(Color color)
         {
             if (_currentAllLedsColor == color)
@@ -166,8 +169,6 @@ namespace NZXTHUEAmbient
             }
 
             // Now we have to create four different commands
-            //TODO: Optimize and apply commands only if at least one led changed
-            // Channel 1 subchannel 1 leds 0-19
             // Channel 1 subchannel 1 leds 0-19
             byte[] bufferC1S1 = new byte[64]; //Always 20 leds per command
             bufferC1S1[0] = 0x24; // Per led command

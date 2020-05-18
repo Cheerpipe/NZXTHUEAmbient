@@ -8,9 +8,9 @@ namespace NZXTHUEAmbientSetter
     public class ArgsPipeInterOp
     {
         public static bool StopListening = false;
-        public void StartArgsPipeServer()
+        public void StartArgsPipeServer(string pipeName)
         {
-            var s = new NamedPipeServerStream("NZXTHUEAmbientSetter", PipeDirection.In);
+            var s = new NamedPipeServerStream(pipeName, PipeDirection.In);
             Action<NamedPipeServerStream> a = GetArgsCallBack;
             a.BeginInvoke(s, callback: ar => { }, @object: null);
         }
