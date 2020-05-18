@@ -144,6 +144,8 @@ namespace NZXTHUEAmbient
 
         public void TransactionSetLed(byte led, Color color)
         {
+            if (_transactionColors == null)
+                TransactionStart();
             _transactionColors[led] = color;
         }
 
@@ -175,9 +177,9 @@ namespace NZXTHUEAmbient
             Parallel.For(1, 21, i =>
                    {
                        bufferC1S1[(i * 3 + 1)] = colors[((i * 3 + 1) - 4) / 3].G;      // G
-                      bufferC1S1[(i * 3 + 1) + 1] = colors[((i * 3 + 1) - 4) / 3].R;  // R
-                      bufferC1S1[(i * 3 + 1) + 2] = colors[((i * 3 + 1) - 4) / 3].B;  // B
-                  });
+                       bufferC1S1[(i * 3 + 1) + 1] = colors[((i * 3 + 1) - 4) / 3].R;  // R
+                       bufferC1S1[(i * 3 + 1) + 2] = colors[((i * 3 + 1) - 4) / 3].B;  // B
+                   });
 
             // Channel 1 subchannel 2 leds 20-24   
             var bufferC1S2 = new byte[64];
@@ -187,12 +189,12 @@ namespace NZXTHUEAmbient
                 bufferC1S2[1] = 0x05; // Subchannel 1
                 bufferC1S2[2] = 0x01; // Channel 1
                 bufferC1S2[3] = 0x01; // Unknown
-                Parallel.For(1,11, i =>
-                {
-                    bufferC1S2[(i * 3 + 1)] = colors[((i * 3 + 1) + 56) / 3].G; // G
-                    bufferC1S2[(i * 3 + 1) + 1] = colors[((i * 3 + 1) + 56) / 3].R; // R
-                    bufferC1S2[(i * 3 + 1) + 2] = colors[((i * 3 + 1) + 56) / 3].B; // B
-                });
+                Parallel.For(1, 11, i =>
+                 {
+                     bufferC1S2[(i * 3 + 1)] = colors[((i * 3 + 1) + 56) / 3].G; // G
+                     bufferC1S2[(i * 3 + 1) + 1] = colors[((i * 3 + 1) + 56) / 3].R; // R
+                     bufferC1S2[(i * 3 + 1) + 2] = colors[((i * 3 + 1) + 56) / 3].B; // B
+                 });
             }
 
             // Channel 2 subchannel 1 leds 26-45
