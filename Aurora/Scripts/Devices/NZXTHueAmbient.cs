@@ -34,7 +34,7 @@ public class NZXTHUEAmbient
   
 	public void SendArgs(string[] args)
 	{
-		using (var pipe = new NamedPipeClientStream(".", "NZXTHUEAmbientSetter", PipeDirection.Out))
+		using (var pipe = new NamedPipeClientStream(".", "NZXTHUEAmbientSetterDevice0", PipeDirection.Out))
 		using (var stream = new StreamWriter(pipe))
 		{
 			pipe.Connect(timeout: 100);

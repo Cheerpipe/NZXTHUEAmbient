@@ -27,14 +27,17 @@ namespace NZXTHUEAmbientSetter
         static void Main()
         {
             HUE2AmbientDeviceLoader.InitDevices().Wait();
+            if (HUE2AmbientDeviceLoader.Devices.Length == 0)
+            {
+                throw new Exception("No HUE 2 Ambiente devices found");
+            }
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
-            //_controller.InitDeviceSync(56); //I have 56 leds
-            var pipeInterOp = new ArgsPipeInterOp();
+            ArgsPipeInterOp pipeInterOpDevice0 = new ArgsPipeInterOp();
 
             _setterThread = new Thread(DoSetter);
             _setterThread.SetApartmentState(ApartmentState.STA);
             _setterThread.Start();
-            pipeInterOp.StartArgsPipeServer("NZXTHUEAmbientSetter");
+            pipeInterOpDevice0.StartArgsPipeServer("NZXTHUEAmbientSetterDevice0");
             _setterThread.Join();
 
         }
