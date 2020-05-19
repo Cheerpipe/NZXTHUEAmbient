@@ -146,7 +146,7 @@ namespace NZXTHUEAmbient
             for (int i = 15; i <= 20; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //15 to 20 contains channel 1 device types
 
             _channel2LedCount = 0;
-            for (int i = 21; i <= 26; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //21 to 26 contains channel 2 device types
+            for (int i = 21; i <= 26; i++) { _channel2LedCount += _stripLenghts[response[i]]; } //21 to 26 contains channel 2 device types
 
             _totalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
         }
