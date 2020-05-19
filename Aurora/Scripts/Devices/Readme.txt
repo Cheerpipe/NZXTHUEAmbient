@@ -1,0 +1,1 @@
+This is not a part of the project itself. Just a backup of my scripted devices for Aurora.

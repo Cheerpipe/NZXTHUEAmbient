@@ -10,7 +10,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Threading;
 
-public class NZXTHUEAmbient
+public class NZXTHUEAmbientMonitor
 {
     public string devicename = "NZXT HUE Ambient Monitor";
     public bool enabled = true; //Switch to True, to enable it in Aurora
@@ -34,7 +34,7 @@ public class NZXTHUEAmbient
   
 	public void SendArgs(string[] args)
 	{
-		using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController0", PipeDirection.Out))
+		using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController1", PipeDirection.Out))
 		using (var stream = new StreamWriter(pipe))
 		{
 			pipe.Connect(timeout: 15);

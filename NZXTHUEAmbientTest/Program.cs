@@ -11,26 +11,39 @@ namespace NZXTHUEAmbient
         //private static HUE2AmbientDevice controller = new HUE2AmbientDevice();
         static void Main(string[] args)
         {
+            /*
+            My monitor Setup 10 x 18 
+
+                10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
+            9                                                       28
+            8                                                       29                                                     
+            7                                                       30
+ =          6                                                       31
+            5                                                       32
+            4                                                       33
+            3                                                       34
+            2                                                       35
+            1                                                       36 
+            0                                                       37
+ 18           55 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 
+            */
 
             /*
-My Setup 10 x 18 
+            My desktop Setup 10 x 18 
 
-    10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
-9                                                       28
-8                                                       29                                                     
-7                                                       30
-6                                                       31
-5                                                       32
-4                                                       33
-3                                                       34
-2                                                       35
-1                                                       36 
-0                                                       37
-    55 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 
-*/
-
+            25                                                                                                  26
+            24                                                                                                   27
+            23                                                                                                   28
+            22                                                                                                   29
+            21                                                                                                   30
+            20                                                                                                   31
+            19                                                                                                   32
+            18                                                                                                   33
+            17                                                                                                   34
+            16                                                                                                   35
+16            15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 [CONTROLLER] 51 50 49 48 47 46 45 44 43 42 41 40 39 38 37 36
+             */
             HUE2AmbientDeviceLoader.InitDevices().Wait();
-
 
             foreach (HUE2AmbientDeviceController controller in HUE2AmbientDeviceLoader.Devices)
 
