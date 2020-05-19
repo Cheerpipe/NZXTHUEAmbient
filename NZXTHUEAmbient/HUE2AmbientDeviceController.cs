@@ -142,21 +142,12 @@ namespace NZXTHUEAmbient
             request[2] = 0x00;
             byte[] response = await _device.WriteAndReadAsync(request);
 
-            _channel1LedCount = (byte)(
-               _stripLenghts[response[15]] +
-               _stripLenghts[response[16]] +
-               _stripLenghts[response[17]] +
-               _stripLenghts[response[18]] +
-               _stripLenghts[response[19]] +
-               _stripLenghts[response[20]]);
+            _channel1LedCount = 0;
+            for (int i = 15; i <= 20; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //15 to 20 contains channel 1 device types
 
-            _channel2LedCount = (byte)(
-               _stripLenghts[response[21]] +
-               _stripLenghts[response[22]] +
-               _stripLenghts[response[23]] +
-               _stripLenghts[response[24]] +
-               _stripLenghts[response[25]] +
-               _stripLenghts[response[26]]);
+            _channel2LedCount = 0;
+            for (int i = 21; i <= 26; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //21 to 26 contains channel 2 device types
+
             _totalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
         }
 

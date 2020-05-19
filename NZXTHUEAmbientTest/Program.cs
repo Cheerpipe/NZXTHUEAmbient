@@ -29,9 +29,6 @@ My Setup 10 x 18
     55 54 53 52 51 50 49 48 47 46 45 44 43 42 41 40 39 38 
 */
 
-
-
-
             HUE2AmbientDeviceLoader.InitDevices().Wait();
             int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
 
