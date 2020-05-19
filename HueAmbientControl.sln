@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NZXTHUEAmbient", "NZXTHUEAm
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NZXTHUEAmbientTest", "NZXTHUEAmbientTest\NZXTHUEAmbientTest.csproj", "{B260F612-CD10-4C84-871D-5076A2492AC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NZXTHUEAmbientAurora", "NZXTHUEAmbientAurora\NZXTHUEAmbientAurora.csproj", "{5593C5AD-AEC0-405E-86CC-3D9D64EDCF8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NZXTHUEAmbientListener", "NZXTHUEAmbientListener\NZXTHUEAmbientListener.csproj", "{5593C5AD-AEC0-405E-86CC-3D9D64EDCF8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

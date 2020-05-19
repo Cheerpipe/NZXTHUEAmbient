@@ -1,56 +1,52 @@
-﻿
-using Microsoft.Win32;
-using NZXTHUEAmbient;
+﻿using NZXTHUEAmbient;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
+using System.IO;
+using System.IO.Pipes;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace NZXTHUEAmbientSetter
+namespace NZXTHUEAmbientListener
 {
-    // For use with Aurora Project
-    // https://github.com/antonpup/Aurora or any other program using NamedPipes
-
-    static class Program
+    public class Listener
     {
-        private static Thread _setterThread;
-        private static readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
-        private static HUE2AmbientDeviceController _deviceController;
-        private static byte R = 0;
-        private static byte G = 0;
-        private static byte B = 0;
-        private static bool _shutingDown = false;
+        public bool StopListening = false;
+        private Thread _setterThread;
+        private readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
+        private bool _shutingDown = false;
+        private HUE2AmbientDeviceController _deviceController;
+        private byte R = 0;
+        private byte G = 0;
+        private byte B = 0;
 
-        static void Main()
+        public Listener(HUE2AmbientDeviceController hue2AmbientDeviceController, int _deviceId)
         {
-            HUE2AmbientDeviceLoader.InitDevices().Wait();
-            _deviceController = HUE2AmbientDeviceLoader.Devices.FirstOrDefault();
-
-            if (HUE2AmbientDeviceLoader.Devices.Length == 0)
-            {
-                throw new Exception("No HUE 2 Ambiente devices found");
-            }
-            SystemEvents.SessionEnding += SystemEvents_SessionEnding;
-            ArgsPipeInterOp pipeInterOpDevice0 = new ArgsPipeInterOp();
-
+            _deviceController = hue2AmbientDeviceController;
             _setterThread = new Thread(DoSetter);
-            _setterThread.SetApartmentState(ApartmentState.STA);
             _setterThread.Start();
-            pipeInterOpDevice0.StartArgsPipeServer("NZXTHUEAmbientSetterDevice0");
+            StartArgsPipeServer("HUE2AmbientDeviceController" + _deviceId.ToString());
             _setterThread.Join();
-
         }
 
-        private static void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        public void StartArgsPipeServer(string pipeName)
         {
-            Run(new string[] { "shutdown" });
+            var s = new NamedPipeServerStream(pipeName, PipeDirection.In);
+            Action<NamedPipeServerStream> a = GetArgsCallBack;
+            a.BeginInvoke(s, callback: ar => { }, @object: null);
         }
 
-        public static void DoSetter()
+        private void GetArgsCallBack(NamedPipeServerStream pipe)
+        {
+            while (!StopListening)
+            {
+                pipe.WaitForConnection();
+                var sr = new StreamReader(pipe);
+                var args = sr.ReadToEnd().Split(' ');
+                Setter(args);
+                pipe.Disconnect();
+            }
+        }
+
+        public void DoSetter()
         {
             while (_setterThread.IsAlive)
             {
@@ -60,12 +56,12 @@ namespace NZXTHUEAmbientSetter
             }
         }
 
-        public static void Run(string[] args)
+
+        public void Setter(string[] args)
         {
             if (_shutingDown)
                 return;
-            //TODO: implement propper command parser
-            //TODO: allow arrays as command params to reduce pipe call ammount.
+
             if (args.Length == 4)
             {
                 R = Convert.ToByte(args[0]);
@@ -93,7 +89,7 @@ namespace NZXTHUEAmbientSetter
                         break;
                     case "shutdown":
                         _shutingDown = true;
-                        ArgsPipeInterOp.StopListening = true;
+                        // _.StopListening = true;
                         R = 0;
                         G = 0;
                         B = 0;

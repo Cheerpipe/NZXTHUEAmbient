@@ -21,12 +21,12 @@ public class NZXTHUEAmbient
         try
         {
 			KillProcessByName("NZXT CAM.exe");
-			KillProcessByName("NZXTHUEAmbientAurora.exe");
-			Thread.Sleep(100);
-			Process.Start(@"D:\Warez\Utiles\NZXTHUEAmbientSetter\NZXTHUEAmbientAurora.exe.exe");
+			KillProcessByName("NZXTHUEAmbientListener.exe");
+			Thread.Sleep(500);
+			Process.Start("NZXTHUEAmbientListener.exe");
             return true;
         }
-        catch(Exception exc)
+        catch(Exception)
         {
             return false;
         }
@@ -34,10 +34,10 @@ public class NZXTHUEAmbient
   
 	public void SendArgs(string[] args)
 	{
-		using (var pipe = new NamedPipeClientStream(".", "NZXTHUEAmbientSetterDevice0", PipeDirection.Out))
+		using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController0", PipeDirection.Out))
 		using (var stream = new StreamWriter(pipe))
 		{
-			pipe.Connect(timeout: 100);
+			pipe.Connect(timeout: 15);
 			stream.Write(string.Join(separator: " ", value: args));
 		}
 	}	
@@ -55,13 +55,14 @@ public class NZXTHUEAmbient
     public void Reset()
     {
 		Shutdown();
+        Thread.Sleep(1000);		
 		Initialize();
     }
     
     public void Shutdown()
     {
 		SendArgs(new string[] { "shutdown" });
-		Thread.Sleep(5000);		
+		Thread.Sleep(1000);
     }
     
     public bool UpdateDevice(Dictionary<DeviceKeys, Color> keyColors, bool forced)
@@ -70,101 +71,202 @@ public class NZXTHUEAmbient
         {
             foreach (KeyValuePair<DeviceKeys, Color> key in keyColors)
             {
-				if(key.Key == DeviceKeys.F1)
+				if(key.Key == DeviceKeys.ADDITIONALLIGHT1)
                 {
-                    SendArgs(new string[] { "transactionstart" });
-					
-					SendColorToDevice(key.Value, forced,0);
-					SendColorToDevice(key.Value, true,1);
-					SendColorToDevice(key.Value, true,2);
-					SendColorToDevice(key.Value, true,3);
-					SendColorToDevice(key.Value, true,4);
-					SendColorToDevice(key.Value, true,5);
-					SendColorToDevice(key.Value, true,6);
-					SendColorToDevice(key.Value, true,7);
-					SendColorToDevice(key.Value, true,8);
+					SendArgs(new string[] { "transactionstart" });
+					//Horizontal
 					SendColorToDevice(key.Value, true,9);
-					SendColorToDevice(key.Value, true,10);
-					SendColorToDevice(key.Value, true,11);
+					SendColorToDevice(key.Value, true,8);
+					SendColorToDevice(key.Value, true,7);					
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT2)
+                {
+					SendColorToDevice(key.Value, true,6);
+					SendColorToDevice(key.Value, true,5);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT3)
+                {
+					SendColorToDevice(key.Value, true,4);
+					SendColorToDevice(key.Value, true,3);
 					
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT4)
+                {
+					SendColorToDevice(key.Value, true,2);
+					SendColorToDevice(key.Value, true,1);
+					SendColorToDevice(key.Value, true,0);
+				}				
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT5)
+                {
 					SendColorToDevice(key.Value, true,55);
-					SendColorToDevice(key.Value, true,54);					
-					
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT27)
+                {					
+					SendColorToDevice(key.Value, true,10);
                 }
-				if(key.Key == DeviceKeys.F2)
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT6)
+				{
+					SendColorToDevice(key.Value, true,54);
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT28)
+                {					
+					SendColorToDevice(key.Value, true,11);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT7)
                 {
-					SendColorToDevice(key.Value, forced,12);					
-					SendColorToDevice(key.Value, true,13);
 					SendColorToDevice(key.Value, true,53);
-					SendColorToDevice(key.Value, true,52);										
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT29)
+                {					
+					SendColorToDevice(key.Value, true,12);
                 }
-				if(key.Key == DeviceKeys.F3)
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT8)
                 {
-                    SendColorToDevice(key.Value, forced,14);
-					SendColorToDevice(key.Value, true,15);
-					SendColorToDevice(key.Value, true,51);
+					SendColorToDevice(key.Value, true,52);
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT30)
+                {					
+                    SendColorToDevice(key.Value, true,13);
+                }
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT9)
+                {
+					SendColorToDevice(key.Value, true,51);					
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT31)
+                {					
+                    SendColorToDevice(key.Value, true,14);
+                }
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT10)
+                {
 					SendColorToDevice(key.Value, true,50);
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT32)
+                {					
+					SendColorToDevice(key.Value, true,15);			
                 }
-				if(key.Key == DeviceKeys.F4)
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT11)
                 {
-                    SendColorToDevice(key.Value, forced,16);
-					SendColorToDevice(key.Value, true,17);
 					SendColorToDevice(key.Value, true,49);
-					SendColorToDevice(key.Value, true,48);					
                 }
-				if(key.Key == DeviceKeys.F5)
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT1)
+                {					
+					SendColorToDevice(key.Value, true,16);
+                }
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT12)
                 {
-					SendColorToDevice(key.Value, forced,18);
-					SendColorToDevice(key.Value, true,19);
+					SendColorToDevice(key.Value, true,48);
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT2)
+                {						
+					SendColorToDevice(key.Value, true,17);
+                }
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT13)
+                {
 					SendColorToDevice(key.Value, true,47);
-					SendColorToDevice(key.Value, true,46);					
                 }
-				if(key.Key == DeviceKeys.F6)
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT3)
+                {						
+					SendColorToDevice(key.Value, true,18);			
+                }
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT14)
                 {
-					SendColorToDevice(key.Value, forced,20);
-					SendColorToDevice(key.Value, true,21);
-					SendColorToDevice(key.Value, true,45);
+					SendColorToDevice(key.Value, true,46);
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT4)
+                {						
+					SendColorToDevice(key.Value, true,19);
+                }				
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT15)
+                {
+					SendColorToDevice(key.Value, true,45);	
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT5)
+                {						
+					SendColorToDevice(key.Value, true,20);	
+                }				
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT16)
+                {
 					SendColorToDevice(key.Value, true,44);
-					
                 }
-				if(key.Key == DeviceKeys.F7)
-                {
-					SendColorToDevice(key.Value, forced,22);
-					SendColorToDevice(key.Value, true,23);
-					SendColorToDevice(key.Value, true,43);
-					SendColorToDevice(key.Value, true,42);					
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT6)
+                {						
+					SendColorToDevice(key.Value, true,21);
+                }	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT17)
+				{
+					SendColorToDevice(key.Value, true,43);	
+				}
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT7)
+                {	
+					SendColorToDevice(key.Value, true,22);
+				}	
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT18)
+				{
+					SendColorToDevice(key.Value, true,42);
                 }
-				if(key.Key == DeviceKeys.F8)
-                {
-					SendColorToDevice(key.Value, forced,24);
-					SendColorToDevice(key.Value, true,25);
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT8)
+                {						
+					SendColorToDevice(key.Value, true,23);	
+				}					
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT19)
+				{
 					SendColorToDevice(key.Value, true,41);
-					SendColorToDevice(key.Value, true,40);					
                 }
-				if(key.Key == DeviceKeys.F9)
-                {
-					SendColorToDevice(key.Value, forced,26);
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT9)
+                {	
+					SendColorToDevice(key.Value, true,24);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT20)
+				{
+					SendColorToDevice(key.Value, true,40);
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT10)
+                {						
+					SendColorToDevice(key.Value, true,25);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT21)
+				{
+					SendColorToDevice(key.Value, true,39);
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT11)
+                {						
+					SendColorToDevice(key.Value, true,26);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT22 )
+				{
+					SendColorToDevice(key.Value, true,38);
+                }
+				else if(key.Key == DeviceKeys.MOUSEPADLIGHT12)
+                {						
 					SendColorToDevice(key.Value, true,27);
-					
-					SendColorToDevice(key.Value, true,28);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT23)
+				{
+					SendColorToDevice(key.Value, true,28);	
 					SendColorToDevice(key.Value, true,29);
 					SendColorToDevice(key.Value, true,30);
-					SendColorToDevice(key.Value, true,31);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT24)
+				{
+					SendColorToDevice(key.Value, true,31);	
 					SendColorToDevice(key.Value, true,32);
-					SendColorToDevice(key.Value, true,33);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT25)
+				{
+					SendColorToDevice(key.Value, true,33);	
 					SendColorToDevice(key.Value, true,34);
-					SendColorToDevice(key.Value, true,35);
+				}
+				else if(key.Key == DeviceKeys.ADDITIONALLIGHT26)
+				{
+					SendColorToDevice(key.Value, true,35);	
+					SendColorToDevice(key.Value, true,36);
 					SendColorToDevice(key.Value, true,37);
-					SendColorToDevice(key.Value, true,37);	
-					SendColorToDevice(key.Value, true,39);
-					SendColorToDevice(key.Value, true,38);					
-					
-					SendArgs(new string[] { "transactioncommit" });
-                }
+					SendArgs(new string[] { "transactioncommit" });	
+				}
             }
             return true;
         }
-        catch(Exception exc)
+        catch(Exception)
         {
             return false;
         }

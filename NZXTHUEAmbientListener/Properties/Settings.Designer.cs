@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace NZXTHUEAmbientAurora.Properties {
+namespace NZXTHUEAmbientListener.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

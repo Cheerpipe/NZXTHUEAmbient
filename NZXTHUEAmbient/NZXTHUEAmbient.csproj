@@ -41,14 +41,9 @@
       <HintPath>..\packages\Hid.Net.3.1.0\lib\net45\Hid.Net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
     <Reference Include="Usb.Net, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7b6bc3f8fb80505e, processorArchitecture=MSIL">
       <HintPath>..\packages\Usb.Net.3.1.0\lib\net45\Usb.Net.dll</HintPath>
     </Reference>
@@ -61,8 +56,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="somename\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
