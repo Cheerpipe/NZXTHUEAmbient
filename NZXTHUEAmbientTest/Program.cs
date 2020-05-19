@@ -34,9 +34,7 @@ My Setup 10 x 18
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
             int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
-            LoopExample(totalLeds);
 
-            return;
             AllExample(Color.FromArgb(255, 0, 0));
             Thread.Sleep(500);
             AllExample(Color.FromArgb(0, 255, 0));
