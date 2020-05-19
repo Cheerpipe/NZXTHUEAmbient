@@ -30,37 +30,51 @@ My Setup 10 x 18
 */
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
-            int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
 
-            AllExample(Color.FromArgb(255, 0, 0));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(0, 255, 0));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(0, 0, 255));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(0, 255, 255));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(255, 0, 255));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(255, 255, 0));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(255, 255, 255));
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(0, 0, 0));
-            TransactionExample1(totalLeds);
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(255, 255, 255));
-            TransactionExample2(totalLeds);
-            Thread.Sleep(500);
-            AllExample(Color.FromArgb(0, 0, 0));
-            TransactionExample3(totalLeds);
-            Thread.Sleep(500);
-            LoopExample(totalLeds);
+
+            foreach (HUE2AmbientDeviceController controller in HUE2AmbientDeviceLoader.Devices)
+
+            {
+                int totalLeds = controller.TotalLedCount;
+
+                AllExample(Color.FromArgb(255, 0, 0), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(0, 255, 0), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(0, 0, 255), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(0, 255, 255), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(255, 0, 255), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(255, 255, 0), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(255, 255, 255), controller);
+                Thread.Sleep(500);
+                AllExample(Color.FromArgb(0, 0, 0), controller);
+                /*
+                                TransactionExample1(totalLeds);
+                                Thread.Sleep(500);
+                                AllExample(Color.FromArgb(255, 255, 255));
+                                TransactionExample2(totalLeds);
+                                Thread.Sleep(500);
+                                AllExample(Color.FromArgb(0, 0, 0));
+                                TransactionExample3(totalLeds);
+                                Thread.Sleep(500);
+                 */
+                LoopExample(totalLeds, controller);
+
+            }
+
+
+
+
+
         }
 
-        private static void AllExample(Color color)
+        private static void AllExample(Color color, HUE2AmbientDeviceController controller)
         {
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLedsSync(color);
+            controller.SetLedsSync(color);
         }
 
 
@@ -70,29 +84,29 @@ My Setup 10 x 18
             Color corner2 = Color.FromArgb(0, 0255, 0);
             Color corner3 = Color.FromArgb(0, 0, 255);
             Color corner4 = Color.FromArgb(255, 0255, 255);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart(1000);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(0, corner1);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(55, corner1);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(9, corner2);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(10, corner2);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(27, corner3);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(28, corner3);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(37, corner4);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(38, corner4);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
+            HUE2AmbientDeviceLoader.Devices[1].TransactionStart(1000);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(0, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(55, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(9, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(10, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(27, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(28, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(37, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(38, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
         }
 
         private static void TransactionExample2(int totalLeds)
         {
             Color top = Color.FromArgb(255, 0, 0);
             Color bottom = Color.FromArgb(0, 0, 255);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart();
+            HUE2AmbientDeviceLoader.Devices[1].TransactionStart();
             for (byte i = 10; i <= 27; i++)
-                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(i, top);
+                HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(i, top);
 
             for (byte i = 38; i <= 55; i++)
-                HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(i, bottom);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
+                HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(i, bottom);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
         }
 
 
@@ -102,33 +116,32 @@ My Setup 10 x 18
             Color corner2 = Color.FromArgb(0, 0255, 0);
             Color corner3 = Color.FromArgb(0, 0, 255);
             Color corner4 = Color.FromArgb(255, 0, 255);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionStart();
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(0, corner1);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(55, corner1);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(9, corner2);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(10, corner2);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(27, corner3);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(28, corner3);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(37, corner4);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionSetLed(38, corner4);
-            HUE2AmbientDeviceLoader.Devices.FirstOrDefault().TransactionCommit();
+            HUE2AmbientDeviceLoader.Devices[1].TransactionStart();
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(0, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(55, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(9, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(10, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(27, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(28, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(37, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(38, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
         }
 
 
-        private static void LoopExample(int totalLeds)
+        private static void LoopExample(int totalLeds, HUE2AmbientDeviceController controller)
         {
-            for (int j = 0; j <= 100; j++)
+            for (int j = 0; j <= 5; j++)
             {
                 Color[] newColors = new Color[totalLeds];
                 for (int i = 0; i < newColors.Length; i++)
                 {
                     newColors[i] = Color.FromArgb(255, 0, 0);
                     if (i == 0)
-                        newColors[55] = Color.FromArgb(0, 0, 0);
+                        newColors[totalLeds - 1] = Color.FromArgb(0, 0, 0);
                     else
                         newColors[i - 1] = Color.FromArgb(0, 0, 0);
-                    HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLeds(newColors, HUE2AmbientDeviceController.LayoutType.Circular).Wait();
-                    Thread.Sleep(50);
+                    controller.SetLeds(newColors, HUE2AmbientDeviceController.LayoutType.Linear).Wait();
 
 
                 }

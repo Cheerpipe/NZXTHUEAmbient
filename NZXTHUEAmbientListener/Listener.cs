@@ -24,7 +24,7 @@ namespace NZXTHUEAmbientListener
             _setterThread = new Thread(DoSetter);
             _setterThread.Start();
             StartArgsPipeServer("HUE2AmbientDeviceController" + _deviceId.ToString());
-            _setterThread.Join();
+           // _setterThread.Join();
         }
 
         public void StartArgsPipeServer(string pipeName)

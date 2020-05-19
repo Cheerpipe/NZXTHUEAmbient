@@ -131,7 +131,8 @@ namespace NZXTHUEAmbient
         {
             if (_transactionColors == null)
                 TransactionStart();
-            _transactionColors[led] = color;
+            if (led < _transactionColors.Length)
+                _transactionColors[led] = color;
         }
 
         private async Task DetectLedCount()
@@ -184,7 +185,7 @@ namespace NZXTHUEAmbient
             }
 
             byte _commandsNeeded = (byte)Math.Ceiling(_channel1LedCount / (double)MAX_LEDS_PER_COMMAND);
-            for (byte commandIndex = 0; commandIndex < _commandsNeeded; commandIndex++)
+            for (byte commandIndex = 0; commandIndex < 2; commandIndex++)
             {
                 byte[] _commandHeader = new byte[4]; //Header
                 _commandHeader[0] = 0x24; // Per led command
@@ -192,12 +193,14 @@ namespace NZXTHUEAmbient
                 _commandHeader[2] = 0x01; // Channel 0x01 channel 1 0x02 channel 2
                 _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
                 byte[] _commandData = new byte[LED_COMMAND_DATA_LENGHT]; //Always 20 leds per command
-                Parallel.For(0, (((_channel1LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel1LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
-                {
-                    _commandData[dataPosition * 3] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].G;
-                    _commandData[dataPosition * 3 + 1] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].R;
-                    _commandData[dataPosition * 3 + 2] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].B;
-                });
+                if (_commandsNeeded > 1)
+                    Parallel.For(0, (((_channel1LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel1LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
+                    {
+                        _commandData[dataPosition * 3] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].G;
+                        _commandData[dataPosition * 3 + 1] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].R;
+                        _commandData[dataPosition * 3 + 2] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].B;
+                    });
+
                 _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
             }
 
@@ -208,7 +211,7 @@ namespace NZXTHUEAmbient
             {
                 Array.Reverse(_newcolors, _channel1LedCount, _channel2LedCount);
             }
-            for (byte commandIndex = 0; commandIndex < _commandsNeeded; commandIndex++)
+            for (byte commandIndex = 0; commandIndex < 2; commandIndex++)
             {
                 byte[] _commandHeader = new byte[4]; //Header
                 _commandHeader[0] = 0x24; // Per led command
@@ -216,7 +219,8 @@ namespace NZXTHUEAmbient
                 _commandHeader[2] = 0x02; // Channel 0x01 channel 1 0x02 channel 2
                 _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
                 byte[] _commandData = new byte[LED_COMMAND_DATA_LENGHT]; //Always 20 leds per command
-                Parallel.For(0, (((_channel2LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel2LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
+                if (_commandsNeeded > 1)
+                    Parallel.For(0, (((_channel2LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel2LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
                 {
                     _commandData[dataPosition * 3] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].G;
                     _commandData[dataPosition * 3 + 1] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].R;
