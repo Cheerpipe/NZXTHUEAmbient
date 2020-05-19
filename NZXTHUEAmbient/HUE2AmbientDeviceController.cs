@@ -12,6 +12,15 @@ namespace NZXTHUEAmbient
 {
     public class HUE2AmbientDeviceController
     {
+        //Move this to a better place
+        private static Dictionary<byte, byte> _stripLenghts = new System.Collections.Generic.Dictionary<byte, byte>() {
+            {0x00, 0},
+            {0x04, 10}, // 4 = 10 led strip
+            {0x05, 8}}; // 5 = 10 led strip
+
+        private const int MAX_LEDS_PER_COMMAND = 20;
+        private const int LED_COMMAND_DATA_LENGHT = MAX_LEDS_PER_COMMAND * 3;
+
         private bool _transactionStarted = false;
         private Color[] _transactionColors;
         private Timer _transactionMaxAliveTimer;
@@ -28,7 +37,7 @@ namespace NZXTHUEAmbient
         public byte Channel1LedCount { get => _channel1LedCount; }
         public byte Channel2LedCount { get => _channel2LedCount; }
         public byte TotalLedCount { get => _totalLedCount; }
-        
+
         public HUE2AmbientDeviceController(IDevice device)
         {
             _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
@@ -127,14 +136,6 @@ namespace NZXTHUEAmbient
 
         private async Task DetectLedCount()
         {
-            // 0x04 = 10 led strip
-            // 0x05 = 8 led strip
-            //TODO Move this to a better place
-            Dictionary<byte, byte> _stripLenghts = new System.Collections.Generic.Dictionary<byte, byte>();
-            _stripLenghts.Add(0x00, 0);
-            _stripLenghts.Add(0x04, 10);
-            _stripLenghts.Add(0x05, 8);
-
             byte[] request = new byte[64];
             request[0] = 0x20;
             request[1] = 0x03;
@@ -167,84 +168,71 @@ namespace NZXTHUEAmbient
             _transactionStarted = false;
         }
 
-        public async Task SetLeds(Color[] colors)
+        //TODO: Move this to a better place
+        public enum LayoutType
+        {
+            Circular,
+            Linear,
+            FromCenter
+        }
+
+        public async Task SetLeds(Color[] colors, LayoutType layoutType = LayoutType.Circular)
         {
             if (_device == null)
             {
                 throw new Exception("No device detected to send command SetLeds(Color[] newSingleLedColor)");
             }
 
-            // Now we have to create four different commands
-            // Channel 1 subchannel 1 leds 0-19
-            byte[] bufferC1S1 = new byte[64]; //Always 20 leds per command
-            bufferC1S1[0] = 0x24; // Per led command
-            bufferC1S1[1] = 0x04; // Subchannel 1
-            bufferC1S1[2] = 0x01; // Channel 1
-            bufferC1S1[3] = 0x00; // Unknown
-            int c1s1MaxLenght = Channel1LedCount > 20 ? 21 : Channel1LedCount + 1;
-            Parallel.For(1, c1s1MaxLenght, i =>
-                   {
-                       bufferC1S1[(i * 3 + 1)] = colors[((i * 3 + 1) - 4) / 3].G;      // G
-                       bufferC1S1[(i * 3 + 1) + 1] = colors[((i * 3 + 1) - 4) / 3].R;  // R
-                       bufferC1S1[(i * 3 + 1) + 2] = colors[((i * 3 + 1) - 4) / 3].B;  // B
-                   });
+            //Fill channel 1
 
-            // Channel 1 subchannel 2 leds 20-24   
-            var bufferC1S2 = new byte[64];
-            if (TotalLedCount > 40) // 20 is the max capacity per command. If we have more leds, we need second part command
+            Color[] _newcolors = (Color[])colors.Clone();
+            //If Linear, reverse this channel
+            if (layoutType == LayoutType.Linear)
             {
-                bufferC1S2[0] = 0x24; // Per led command
-                bufferC1S2[1] = 0x05; // Subchannel 1
-                bufferC1S2[2] = 0x01; // Channel 1
-                bufferC1S2[3] = 0x01; // Unknown
-                int c1s2MaxLenght = _channel1LedCount - 20 + 1;
-                Parallel.For(1, c1s2MaxLenght, i =>
-                 {
-                     bufferC1S2[(i * 3 + 1)] = colors[((i * 3 + 1) + 56) / 3].G; // G
-                     bufferC1S2[(i * 3 + 1) + 1] = colors[((i * 3 + 1) + 56) / 3].R; // R
-                     bufferC1S2[(i * 3 + 1) + 2] = colors[((i * 3 + 1) + 56) / 3].B; // B
-                 });
+                Array.Reverse(_newcolors, 0, _channel1LedCount);
             }
 
-            // Channel 2 subchannel 1 leds 26-45
-            var bufferC2S1 = new byte[64];
-            bufferC2S1[0] = 0x24; // Per led command
-            bufferC2S1[1] = 0x04; // Subchannel 1
-            bufferC2S1[2] = 0x02; // Channel 2
-            bufferC2S1[3] = 0x00; // Unknown
-            int c2s1MaxLenght = Channel2LedCount > 20 ? 21 : Channel2LedCount + 1;
-            Parallel.For(1, c2s1MaxLenght, i =>
-             {
-                 bufferC2S1[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 20 + 8)].G;     // G
-                 bufferC2S1[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 28)].R; // R
-                 bufferC2S1[(i * 3 + 1) + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 28)].B; // B
-             });
-
-            // Channel 2 subchanel 2 leds 45-50 
-            var bufferC2S2 = new byte[64];
-            if (TotalLedCount > 40) // 20 is the max capacity per command. If we have more than 40 leds we have mor than 20 leds per chanel so we need second part command
+            byte _commandsNeeded = (byte)Math.Ceiling(_channel1LedCount / (double)MAX_LEDS_PER_COMMAND);
+            for (byte commandIndex = 0; commandIndex < _commandsNeeded; commandIndex++)
             {
-                bufferC2S2[0] = 0x24; // Per led command
-                bufferC2S2[1] = 0x05; // Subchannel 2
-                bufferC2S2[2] = 0x02; // Channel 2
-                bufferC2S2[3] = 0x02; // Unknown
-                int c2s2MaxLenght = _channel2LedCount - 20 + 1;
-                Parallel.For(1, c2s2MaxLenght, i =>
-                 {
-                     bufferC2S2[(i * 3 + 1)] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].G;            // G
-                     bufferC2S2[(i * 3 + 1) + 1] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].R;       // R
-                     bufferC2S2[(i * 3 + 1) + 2] = colors[(colors.Length + (colors.Length / 2) - 1) - ((((i * 3 + 1) - 4) / 3) + 48)].B;      // B
-                 });
+                byte[] _commandHeader = new byte[4]; //Header
+                _commandHeader[0] = 0x24; // Per led command
+                _commandHeader[1] = (byte)(0x04 + commandIndex); // Device 0x04 device 1 0x05 device 2 0x06 device 3...
+                _commandHeader[2] = 0x01; // Channel 0x01 channel 1 0x02 channel 2
+                _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
+                byte[] _commandData = new byte[LED_COMMAND_DATA_LENGHT]; //Always 20 leds per command
+                Parallel.For(0, (((_channel1LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel1LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
+                {
+                    _commandData[dataPosition * 3] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].G;
+                    _commandData[dataPosition * 3 + 1] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].R;
+                    _commandData[dataPosition * 3 + 2] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].B;
+                });
+                _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
             }
 
-            //Set channel 1 subchannel 1 and 2
-            await _device.WriteAsync(bufferC1S1);
-            await _device.WriteAsync(bufferC1S2);
-
-            //Set channel 2 subchannel 1 and 2
-            await _device.WriteAsync(bufferC2S1);
-            await _device.WriteAsync(bufferC2S2);
-
+            //Fill channel 2
+            _commandsNeeded = (byte)Math.Ceiling(_channel2LedCount / (double)MAX_LEDS_PER_COMMAND);
+            //If circular, reverse this channel
+            if (layoutType == LayoutType.Circular)
+            {
+                Array.Reverse(_newcolors, _channel1LedCount, _channel2LedCount);
+            }
+            for (byte commandIndex = 0; commandIndex < _commandsNeeded; commandIndex++)
+            {
+                byte[] _commandHeader = new byte[4]; //Header
+                _commandHeader[0] = 0x24; // Per led command
+                _commandHeader[1] = (byte)(0x04 + commandIndex); // Device 0x04 device 1 0x05 device 2 0x06 device 3...
+                _commandHeader[2] = 0x02; // Channel 0x01 channel 1 0x02 channel 2
+                _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
+                byte[] _commandData = new byte[LED_COMMAND_DATA_LENGHT]; //Always 20 leds per command
+                Parallel.For(0, (((_channel2LedCount - (commandIndex * MAX_LEDS_PER_COMMAND)) / MAX_LEDS_PER_COMMAND) > 0 ? MAX_LEDS_PER_COMMAND : _channel2LedCount % MAX_LEDS_PER_COMMAND), dataPosition =>
+                {
+                    _commandData[dataPosition * 3] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].G;
+                    _commandData[dataPosition * 3 + 1] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].R;
+                    _commandData[dataPosition * 3 + 2] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].B;
+                });
+                _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
+            }
             _currentLedsColor = colors;
         }
     }

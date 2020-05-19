@@ -34,7 +34,9 @@ My Setup 10 x 18
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
             int totalLeds = HUE2AmbientDeviceLoader.Devices[0].TotalLedCount;
+            LoopExample(totalLeds);
 
+            return;
             AllExample(Color.FromArgb(255, 0, 0));
             Thread.Sleep(500);
             AllExample(Color.FromArgb(0, 255, 0));
@@ -130,7 +132,8 @@ My Setup 10 x 18
                         newColors[55] = Color.FromArgb(0, 0, 0);
                     else
                         newColors[i - 1] = Color.FromArgb(0, 0, 0);
-                    HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLeds(newColors).Wait();
+                    HUE2AmbientDeviceLoader.Devices.FirstOrDefault().SetLeds(newColors, HUE2AmbientDeviceController.LayoutType.Circular).Wait();
+                    Thread.Sleep(50);
 
 
                 }
