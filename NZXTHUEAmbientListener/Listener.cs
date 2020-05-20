@@ -40,22 +40,10 @@ namespace NZXTHUEAmbientListener
                 pipe.WaitForConnection();
                 var sr = new BinaryReader(pipe);
                 var args = sr.ReadBytes(5);
-                Setter(args);
                 pipe.Disconnect();
+                Setter(args);
             }
         }
-
-
-        public void SendArgs(byte[] args)
-        {
-            using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController1", PipeDirection.Out))
-            using (var stream = new BinaryWriter(pipe))
-            {
-                pipe.Connect(timeout: 15);
-                stream.Write(args);
-            }
-        }
-
 
         public void DoSetter()
         {
@@ -66,7 +54,6 @@ namespace NZXTHUEAmbientListener
                 _setterThreadEvent.Reset();
             }
         }
-
 
         public void Setter(byte[] args)
         {
