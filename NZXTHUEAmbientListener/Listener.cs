@@ -24,7 +24,6 @@ namespace NZXTHUEAmbientListener
             _setterThread = new Thread(DoSetter);
             _setterThread.Start();
             StartArgsPipeServer("HUE2AmbientDeviceController" + _deviceId.ToString());
-           // _setterThread.Join();
         }
 
         public void StartArgsPipeServer(string pipeName)
@@ -39,12 +38,24 @@ namespace NZXTHUEAmbientListener
             while (!StopListening)
             {
                 pipe.WaitForConnection();
-                var sr = new StreamReader(pipe);
-                var args = sr.ReadToEnd().Split(' ');
+                var sr = new BinaryReader(pipe);
+                var args = sr.ReadBytes(5);
                 Setter(args);
                 pipe.Disconnect();
             }
         }
+
+
+        public void SendArgs(byte[] args)
+        {
+            using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController1", PipeDirection.Out))
+            using (var stream = new BinaryWriter(pipe))
+            {
+                pipe.Connect(timeout: 15);
+                stream.Write(args);
+            }
+        }
+
 
         public void DoSetter()
         {
@@ -57,47 +68,59 @@ namespace NZXTHUEAmbientListener
         }
 
 
-        public void Setter(string[] args)
+        public void Setter(byte[] args)
         {
             if (_shutingDown)
                 return;
+            /*
+            Command structure:
+            0: command id
+            1: R
+            2: G
+            3: B
+            4: led index
 
-            if (args.Length == 4)
+            //Command id
+            //0 nothing
+            //1 setledtrx
+            //2 setledall
+            //3 start trx
+            //4 commit trx 
+            //5 shutdown
+            */
+            if (args[0] == 1)
             {
-                R = Convert.ToByte(args[0]);
-                G = Convert.ToByte(args[1]);
-                B = Convert.ToByte(args[2]);
-                byte led = Convert.ToByte(args[3]);
+                R = Convert.ToByte(args[1]);
+                G = Convert.ToByte(args[2]);
+                B = Convert.ToByte(args[3]);
+                byte led = Convert.ToByte(args[4]);
                 _deviceController.TransactionSetLed(led, Color.FromArgb(R, G, B));
             }
-            else if (args.Length == 3)
+            else if (args[0] == 2)
             {
-                R = Convert.ToByte(args[0]);
-                G = Convert.ToByte(args[1]);
-                B = Convert.ToByte(args[2]);
+                R = Convert.ToByte(args[1]);
+                G = Convert.ToByte(args[2]);
+                B = Convert.ToByte(args[3]);
                 _setterThreadEvent.Set();
             }
-            else if (args.Length == 1)
+            else if (args[0] == 3)
             {
-                switch (args[0])
-                {
-                    case "transactionstart":
-                        _deviceController.TransactionStart(1000);
-                        break;
-                    case "transactioncommit":
-                        _deviceController.TransactionCommit();
-                        break;
-                    case "shutdown":
-                        _shutingDown = true;
-                        // _.StopListening = true;
-                        R = 0;
-                        G = 0;
-                        B = 0;
-                        _setterThreadEvent.Set();
-                        Thread.Sleep(1000);
-                        _setterThread.Abort();
-                        break;
-                }
+                _deviceController.TransactionStart(1000);
+            }
+            else if (args[0] == 4)
+            {
+                _deviceController.TransactionCommit();
+            }
+            else if (args[0] == 5)
+            {
+                _shutingDown = true;
+                // _.StopListening = true;
+                R = 0;
+                G = 0;
+                B = 0;
+                _setterThreadEvent.Set();
+                Thread.Sleep(1000);
+                _setterThread.Abort();
             }
         }
     }

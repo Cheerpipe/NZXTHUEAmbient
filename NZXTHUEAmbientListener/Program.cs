@@ -36,7 +36,7 @@ namespace NZXTHUEAmbientListener
         {
             foreach (Listener l in _listeners)
             {
-                l.Setter(new string[] { "shutdown" });
+                l.Setter(new byte[] { 5, 0, 0, 0, 0 });
             }
         }
     }

@@ -18,6 +18,7 @@ namespace NZXTHUEAmbient
             9                                                       28
             8                                                       29                                                     
             7                                                       30
+
  =          6                                                       31
             5                                                       32
             4                                                       33
@@ -31,7 +32,7 @@ namespace NZXTHUEAmbient
             /*
             My desktop Setup 10 x 18 
 
-            25                                                                                                  26
+            25                                                                                                   26
             24                                                                                                   27
             23                                                                                                   28
             22                                                                                                   29
