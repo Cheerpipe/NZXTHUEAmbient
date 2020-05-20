@@ -31,14 +31,15 @@ public class NZXTHUEAmbientMonitor
             return false;
         }
     }
-  
-	public void SendArgs(string[] args)
+
+	public void SendArgs(byte[] args)
 	{
+		return;
 		using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController1", PipeDirection.Out))
-		using (var stream = new StreamWriter(pipe))
+		using (var stream = new BinaryWriter(pipe))
 		{
-			pipe.Connect(timeout: 15);
-			stream.Write(string.Join(separator: " ", value: args));
+			pipe.Connect(timeout: 10);
+			stream.Write(args);
 		}
 	}	
 	
@@ -61,7 +62,7 @@ public class NZXTHUEAmbientMonitor
     
     public void Shutdown()
     {
-		SendArgs(new string[] { "shutdown" });
+		SendArgs(new byte[] { 5,0,0,0,0 });	
 		Thread.Sleep(1000);
     }
     
@@ -73,7 +74,7 @@ public class NZXTHUEAmbientMonitor
             {
 				if(key.Key == DeviceKeys.ADDITIONALLIGHT1)
                 {
-					SendArgs(new string[] { "transactionstart" });
+					SendArgs(new byte[] { 3,0,0,0,0 });	
 					//Horizontal
 					SendColorToDevice(key.Value, true,9);
 					SendColorToDevice(key.Value, true,8);
@@ -261,7 +262,7 @@ public class NZXTHUEAmbientMonitor
 					SendColorToDevice(key.Value, true,35);	
 					SendColorToDevice(key.Value, true,36);
 					SendColorToDevice(key.Value, true,37);
-					SendArgs(new string[] { "transactioncommit" });	
+					SendArgs(new byte[] { 4,0,0,0,0 });	
 				}
             }
             return true;
@@ -273,14 +274,22 @@ public class NZXTHUEAmbientMonitor
     }
     
     //Custom method to send the color to the device
-    private void SendColorToDevice(Color color, bool forced, int led = -1)
+    private void SendColorToDevice(Color color, bool forced, byte led = 0)
     {
        //Check if device's current color is the same, no need to update if they are the same		
+	   //0 nothing
+	   //1 setledtrx
+	   //2 setledall
+	   //3 start trx
+	   //4 commit trx 
+	   //6 shutdown
         if (!device_color.Equals(color) || forced)
         {
 			device_color=color;	
-			string command = string.Format("{0} {1} {2} {3}", Convert.ToInt32(color.R*color.A/255).ToString(), Convert.ToInt32(color.G*color.A/255).ToString(), Convert.ToInt32(color.B*color.A/255).ToString(), led > -1 ? led.ToString() : "" );
-			SendArgs(new string[] { command });
+//			string command = string.Format("{0} {1} {2} {3}", Convert.ToInt32(color.R*color.A/255).ToString(), Convert.ToInt32(color.G*color.A/255).ToString(), Convert.ToInt32(color.B*color.A/255).ToString(), led > -1 ? led.ToString() : "" );
+//			SendArgs(new string[] { command });
+			SendArgs(new byte[5] { 1, Convert.ToByte(color.R*color.A/255), Convert.ToByte(color.G*color.A/255), Convert.ToByte(color.B*color.A/255), led });
+
         }
 	}
 }
