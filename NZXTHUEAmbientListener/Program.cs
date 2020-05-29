@@ -17,8 +17,19 @@ namespace NZXTHUEAmbientListener
         internal static Mutex _singleInstanceMutex = new Mutex(true, "{7073d39a-532d-4b06-bde3-19732814ee77}");
 
         private static List<Listener> _listeners = new List<Listener>();
-        static void Main()
+        static void Main(string[] args)
         {
+            if (args.Contains("--ngen"))
+            {
+                Util.ngen(Util.NgenOperation.Install);
+                return;
+            }
+            if (args.Contains("--unngen"))
+            {
+                Util.ngen(Util.NgenOperation.Uninstall);
+                return;
+            }
+
             //No more than one instance runing
             if (!_singleInstanceMutex.WaitOne(TimeSpan.Zero, true))
                 return;
