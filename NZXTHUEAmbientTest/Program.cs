@@ -1,8 +1,5 @@
 ﻿using System.Drawing;
-using System;
 using System.Threading;
-using System.Diagnostics;
-using System.Linq;
 
 namespace NZXTHUEAmbient
 {
@@ -98,29 +95,27 @@ namespace NZXTHUEAmbient
             Color corner2 = Color.FromArgb(0, 0255, 0);
             Color corner3 = Color.FromArgb(0, 0, 255);
             Color corner4 = Color.FromArgb(255, 0255, 255);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionStart(1000);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(0, corner1);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(55, corner1);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(9, corner2);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(10, corner2);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(27, corner3);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(28, corner3);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(37, corner4);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(38, corner4);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(0, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(55, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(9, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(10, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(27, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(28, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(37, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(38, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].Apply();
         }
 
         private static void TransactionExample2(int totalLeds)
         {
             Color top = Color.FromArgb(255, 0, 0);
             Color bottom = Color.FromArgb(0, 0, 255);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionStart();
             for (byte i = 10; i <= 27; i++)
-                HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(i, top);
+                HUE2AmbientDeviceLoader.Devices[1].SetLed(i, top);
 
             for (byte i = 38; i <= 55; i++)
-                HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(i, bottom);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
+                HUE2AmbientDeviceLoader.Devices[1].SetLed(i, bottom);
+            HUE2AmbientDeviceLoader.Devices[1].Apply();
         }
 
 
@@ -130,16 +125,15 @@ namespace NZXTHUEAmbient
             Color corner2 = Color.FromArgb(0, 0255, 0);
             Color corner3 = Color.FromArgb(0, 0, 255);
             Color corner4 = Color.FromArgb(255, 0, 255);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionStart();
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(0, corner1);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(55, corner1);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(9, corner2);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(10, corner2);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(27, corner3);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(28, corner3);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(37, corner4);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionSetLed(38, corner4);
-            HUE2AmbientDeviceLoader.Devices[1].TransactionCommit();
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(0, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(55, corner1);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(9, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(10, corner2);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(27, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(28, corner3);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(37, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].SetLed(38, corner4);
+            HUE2AmbientDeviceLoader.Devices[1].Apply();
         }
 
 

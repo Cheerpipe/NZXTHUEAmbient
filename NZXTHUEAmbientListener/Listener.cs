@@ -39,7 +39,7 @@ namespace NZXTHUEAmbientListener
             {
                 pipe.WaitForConnection();
                 var sr = new BinaryReader(pipe);
-                var args = sr.ReadBytes(5);
+                var args = sr.ReadBytes(512);
                 pipe.Disconnect();
                 Setter(args);
             }
@@ -59,7 +59,12 @@ namespace NZXTHUEAmbientListener
         {
             if (_shutingDown)
                 return;
+
+
             /*
+            
+            First byte is the command count. Total packet lenght will by command count * command leng 
+
             Command structure:
             0: command id
             1: R
@@ -75,39 +80,42 @@ namespace NZXTHUEAmbientListener
             //4 commit trx 
             //5 shutdown
             */
-            if (args[0] == 1)
+
+            int commandCount = args[0];
+
+            //For each command in data packet process command.
+            for (int i=0; i< commandCount;i++)
             {
-                R = Convert.ToByte(args[1]);
-                G = Convert.ToByte(args[2]);
-                B = Convert.ToByte(args[3]);
-                byte led = Convert.ToByte(args[4]);
-                _deviceController.TransactionSetLed(led, Color.FromArgb(R, G, B));
-            }
-            else if (args[0] == 2)
-            {
-                R = Convert.ToByte(args[1]);
-                G = Convert.ToByte(args[2]);
-                B = Convert.ToByte(args[3]);
-                _setterThreadEvent.Set();
-            }
-            else if (args[0] == 3)
-            {
-                _deviceController.TransactionStart(1000);
-            }
-            else if (args[0] == 4)
-            {
-                _deviceController.TransactionCommit();
-            }
-            else if (args[0] == 5)
-            {
-                _shutingDown = true;
-                // _.StopListening = true;
-                R = 0;
-                G = 0;
-                B = 0;
-                _setterThreadEvent.Set();
-                Thread.Sleep(1000);
-                _setterThread.Abort();
+                if (args[i*5+1] == 1)
+                {
+                    R = Convert.ToByte(args[i * 5 + 2]);
+                    G = Convert.ToByte(args[i * 5 + 3]);
+                    B = Convert.ToByte(args[i * 5 + 4]);
+                    byte led = Convert.ToByte(args[i * 5 + 5]);
+                    _deviceController.SetLed(led, Color.FromArgb(R, G, B));
+                }
+                else if (args[i * 5 + 1] == 2)
+                {
+                    R = Convert.ToByte(args[i * 5 + 2]);
+                    G = Convert.ToByte(args[i * 5 + 3]);
+                    B = Convert.ToByte(args[i * 5 + 4]);
+                    _setterThreadEvent.Set();
+                }
+                else if (args[i * 5 + 1] == 4)
+                {
+                    _deviceController.Apply();
+                }
+                else if (args[i * 5 + 1] == 5)
+                {
+                    _shutingDown = true;
+                    // _.StopListening = true;
+                    R = 0;
+                    G = 0;
+                    B = 0;
+                    _setterThreadEvent.Set();
+                    Thread.Sleep(1000);
+                    _setterThread.Abort();
+                }
             }
         }
     }

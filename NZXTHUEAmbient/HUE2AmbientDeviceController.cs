@@ -1,11 +1,8 @@
 ﻿using Device.Net;
-using Hid.Net.Windows;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NZXTHUEAmbient
@@ -21,9 +18,7 @@ namespace NZXTHUEAmbient
         private const int MAX_LEDS_PER_COMMAND = 20;
         private const int LED_COMMAND_DATA_LENGHT = MAX_LEDS_PER_COMMAND * 3;
 
-        private bool _transactionStarted = false;
-        private Color[] _transactionColors;
-        private Timer _transactionMaxAliveTimer;
+        //private Color[] _newColors;
 
         private Color _currentAllLedsColor;
         private Color[] _currentLedsColor;
@@ -40,23 +35,11 @@ namespace NZXTHUEAmbient
 
         public HUE2AmbientDeviceController(IDevice device)
         {
-            _transactionMaxAliveTimer = new Timer(new TimerCallback(_transactionTimeoutTimer_Tick), null, Timeout.Infinite, Timeout.Infinite);
             _device = device;
             _device.InitializeAsync().Wait();
             DetectLedCount().Wait();
             _currentLedsColor = new Color[_totalLedCount];
-        }
-
-        private void _transactionTimeoutTimer_Tick(object state)
-        {
-            _transactionMaxAliveTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            if (!_transactionStarted) return;
-            TransactionCancel();
-        }
-
-        public void TransactionCancel()
-        {
-            _transactionStarted = false;
+            //_newColors = new Color[_totalLedCount];
         }
 
         public async Task SetLeds(Color color)
@@ -116,23 +99,9 @@ namespace NZXTHUEAmbient
         {
             SetLeds(colors).Wait(100);
         }
-
-        public void TransactionStart(int transactionTimeout = Timeout.Infinite)
+        public void SetLed(byte led, Color color)
         {
-            _transactionStarted = true;
-            _transactionColors = (Color[])_currentLedsColor.Clone();
-            if (transactionTimeout > 0)
-            {
-                _transactionMaxAliveTimer.Change(transactionTimeout, transactionTimeout);
-            }
-        }
-
-        public void TransactionSetLed(byte led, Color color)
-        {
-            if (_transactionColors == null)
-                TransactionStart();
-            if (led < _transactionColors.Length)
-                _transactionColors[led] = color;
+            _currentLedsColor[led] = color;
         }
 
         private async Task DetectLedCount()
@@ -152,12 +121,10 @@ namespace NZXTHUEAmbient
             _totalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
         }
 
-        public void TransactionCommit()
+        public void Apply()
         {
-            if (!_transactionStarted)
-                return;
-            SetLedsSync(_transactionColors);
-            _transactionStarted = false;
+            SetLedsSync(_currentLedsColor);
+           // _currentLedsColor.CopyTo(_currentLedsColor, _currentLedsColor.Length);
         }
 
         //TODO: Move this to a better place

@@ -15,7 +15,6 @@ public class NZXTHUEAmbientDisplay
 {
     public string devicename = "NZXT HUE Ambient Display";
     public bool enabled = true; //Switch to True, to enable it in Aurora
-    private Color device_color = Color.Black;
 
     public bool Initialize()
     {
@@ -35,7 +34,7 @@ public class NZXTHUEAmbientDisplay
 
     public void SendArgs(byte[] args)
     {
-        using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController1", PipeDirection.Out))
+        using (var pipe = new NamedPipeClientStream(".", "HUE2AmbientDeviceController0", PipeDirection.Out))
         using (var stream = new BinaryWriter(pipe))
         {
             pipe.Connect(timeout: 10);
@@ -79,64 +78,66 @@ public class NZXTHUEAmbientDisplay
         }
     }
 
+	private static Color _initialColor = Color.FromArgb(0, 0, 0);
     private List<DeviceMapState> deviceMap = new List<DeviceMapState>
     {
-      new DeviceMapState(0, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT4),
-      new DeviceMapState(1, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT4),
-      new DeviceMapState(2, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT4),
-      new DeviceMapState(3, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT3),
-      new DeviceMapState(4, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT3),
-      new DeviceMapState(5, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT2),
-      new DeviceMapState(6, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT2),
-      new DeviceMapState(7, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT1),
-      new DeviceMapState(8, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT1),
-      new DeviceMapState(9, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT1),
-      new DeviceMapState(10, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT27),
-      new DeviceMapState(11, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT28),
-      new DeviceMapState(12, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT29),
-      new DeviceMapState(13, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT30),
-      new DeviceMapState(14, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT31),
-      new DeviceMapState(15, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT32),
-      new DeviceMapState(16, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT1),
-      new DeviceMapState(17, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT2),
-      new DeviceMapState(18, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT3),
-      new DeviceMapState(19, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT4),
-      new DeviceMapState(20, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT5),
-      new DeviceMapState(21, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT6),
-      new DeviceMapState(22, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT7),
-      new DeviceMapState(23, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT8),
-      new DeviceMapState(24, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT9),
-      new DeviceMapState(25, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT10),
-      new DeviceMapState(26, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT11),
-      new DeviceMapState(27, Color.FromArgb(0, 0, 0), DeviceKeys.MOUSEPADLIGHT12),
-      new DeviceMapState(28, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT23),
-      new DeviceMapState(29, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT23),
-      new DeviceMapState(30, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT23),
-      new DeviceMapState(31, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT24),
-      new DeviceMapState(32, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT24),
-      new DeviceMapState(33, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT25),
-      new DeviceMapState(34, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT25),
-      new DeviceMapState(35, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT26),
-      new DeviceMapState(36, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT26),
-      new DeviceMapState(37, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT26),
-      new DeviceMapState(38, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT22),
-      new DeviceMapState(39, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT21),
-      new DeviceMapState(40, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT20),
-      new DeviceMapState(41, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT19),
-      new DeviceMapState(42, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT18),
-      new DeviceMapState(43, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT17),
-      new DeviceMapState(44, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT16),
-      new DeviceMapState(45, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT15),
-      new DeviceMapState(46, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT14),
-      new DeviceMapState(47, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT13),
-      new DeviceMapState(48, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT12),
-      new DeviceMapState(49, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT11),
-      new DeviceMapState(50, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT10),
-      new DeviceMapState(51, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT9),
-      new DeviceMapState(52, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT8),
-      new DeviceMapState(53, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT7),
-      new DeviceMapState(54, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT6),
-      new DeviceMapState(55, Color.FromArgb(0, 0, 0), DeviceKeys.ADDITIONALLIGHT5)
+	  //             To Area/Key				   From DeviceKey		
+      new DeviceMapState(0, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_0),
+      new DeviceMapState(1, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_1),
+      new DeviceMapState(2, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_2),
+      new DeviceMapState(3, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_3),
+      new DeviceMapState(4, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_4),
+      new DeviceMapState(5, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_5),
+      new DeviceMapState(6, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_6),
+      new DeviceMapState(7, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_7),
+      new DeviceMapState(8, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_8),
+      new DeviceMapState(9, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_9),
+      new DeviceMapState(10, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_10),
+      new DeviceMapState(11, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_11),
+      new DeviceMapState(12, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_12),
+      new DeviceMapState(13, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_13),
+      new DeviceMapState(14, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_14),
+      new DeviceMapState(15, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_15),
+      new DeviceMapState(16, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_16),
+      new DeviceMapState(17, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_17),
+      new DeviceMapState(18, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_18),
+      new DeviceMapState(19, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_19),
+      new DeviceMapState(20, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_20),
+      new DeviceMapState(21, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_21),
+      new DeviceMapState(22, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_22),
+      new DeviceMapState(23, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_23),
+      new DeviceMapState(24, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_24),
+      new DeviceMapState(25, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_25),
+      new DeviceMapState(26, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_26),
+      new DeviceMapState(27, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_27),
+      new DeviceMapState(28, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_28),
+      new DeviceMapState(29, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_29),
+      new DeviceMapState(30, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_30),
+      new DeviceMapState(31, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_31),
+      new DeviceMapState(32, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_32),
+      new DeviceMapState(33, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_33),
+      new DeviceMapState(34, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_34),
+      new DeviceMapState(35, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_35),
+      new DeviceMapState(36, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_36),
+      new DeviceMapState(37, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_37),
+      new DeviceMapState(38, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_38),
+      new DeviceMapState(39, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_30),
+      new DeviceMapState(40, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_30),
+      new DeviceMapState(41, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_41),
+      new DeviceMapState(42, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_42),
+      new DeviceMapState(43, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_43),
+      new DeviceMapState(44, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_44),
+      new DeviceMapState(45, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_45),
+      new DeviceMapState(46, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_46),
+      new DeviceMapState(47, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_47),
+      new DeviceMapState(48, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_48),
+      new DeviceMapState(49, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_49),
+      new DeviceMapState(50, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_50),
+      new DeviceMapState(51, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_51),
+      new DeviceMapState(52, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_52),
+      new DeviceMapState(53, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_53),
+      new DeviceMapState(54, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_54),
+      new DeviceMapState(55, _initialColor, DeviceKeys.LEDSTRIPLIGHT1_55)
     };
 
     bool _deviceChanged = true;
@@ -146,7 +147,7 @@ public class NZXTHUEAmbientDisplay
         {
             foreach (KeyValuePair<DeviceKeys, Color> key in keyColors)
             {
-                if (key.Key == DeviceKeys.ADDITIONALLIGHT1)
+                if (key.Key == DeviceKeys.LEDSTRIPLIGHT1_0)
                 {
 					if (_deviceChanged)
 						SendArgs(new byte[] { 4, 0, 0, 0, 0 });
