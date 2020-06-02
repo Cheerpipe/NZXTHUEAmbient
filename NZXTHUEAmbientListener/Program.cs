@@ -56,7 +56,7 @@ namespace NZXTHUEAmbientListener
         {
             foreach (Listener l in _listeners)
             {
-                l.Setter(new byte[] { 5, 0, 0, 0, 0 });
+                l.Setter(new byte[] { 1, 5, 0, 0, 0, 0 });
             }
         }
     }
