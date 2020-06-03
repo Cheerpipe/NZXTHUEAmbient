@@ -26,6 +26,7 @@ namespace NZXTHUEAmbientListener
             StartArgsPipeServer("HUE2AmbientDeviceController" + _deviceId.ToString());
         }
 
+        //TODO: Use MMF instead of pipes
         public void StartArgsPipeServer(string pipeName)
         {
             var s = new NamedPipeServerStream(pipeName, PipeDirection.In);

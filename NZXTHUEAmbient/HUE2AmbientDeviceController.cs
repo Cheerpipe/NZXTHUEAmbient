@@ -127,7 +127,6 @@ namespace NZXTHUEAmbient
         public void Apply()
         {
             SetLedsSync(_currentLedsColor);
-            // _currentLedsColor.CopyTo(_currentLedsColor, _currentLedsColor.Length);
         }
 
         //TODO: Move this to a better place
@@ -176,7 +175,7 @@ namespace NZXTHUEAmbient
                         });
                     }
                     _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
-                    Thread.Sleep(1);
+
                 }
 
                 //Fill channel 2
@@ -206,9 +205,11 @@ namespace NZXTHUEAmbient
                         });
                     }
                     _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
-                    Thread.Sleep(1);
+
                 }
                 _currentLedsColor = colors;
+                //33ms to limit fps to 30 because it is the framerate pushed by Aurora
+                Thread.Sleep(33);
             }
         }
     }
