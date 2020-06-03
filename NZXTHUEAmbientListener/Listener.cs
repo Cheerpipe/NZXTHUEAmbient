@@ -59,8 +59,6 @@ namespace NZXTHUEAmbientListener
         {
             if (_shutingDown)
                 return;
-
-
             /*
             
             First byte is the command count. Total packet lenght will by command count * command leng 
@@ -86,24 +84,24 @@ namespace NZXTHUEAmbientListener
             //For each command in data packet process command.
             for (int i=0; i< commandCount;i++)
             {
-                if (args[i*5+1] == 1)
+                if (args[i*5+1] == 1) //setledtrx
                 {
-                    R = Convert.ToByte(args[i * 5 + 2]);
-                    G = Convert.ToByte(args[i * 5 + 3]);
-                    B = Convert.ToByte(args[i * 5 + 4]);
-                    byte led = Convert.ToByte(args[i * 5 + 5]);
+                    R =args[i * 5 + 2];
+                    G = args[i * 5 + 3];
+                    B = args[i * 5 + 4];
+                    byte led = args[i * 5 + 5];
                     _deviceController.SetLed(led, Color.FromArgb(R, G, B));
+                }
+                else if (args[i * 5 + 1] == 4) // Commit
+                {
+                    _deviceController.Apply();
                 }
                 else if (args[i * 5 + 1] == 2)
                 {
-                    R = Convert.ToByte(args[i * 5 + 2]);
-                    G = Convert.ToByte(args[i * 5 + 3]);
-                    B = Convert.ToByte(args[i * 5 + 4]);
+                    R = args[i * 5 + 2];
+                    G = args[i * 5 + 3];
+                    B = args[i * 5 + 4];
                     _setterThreadEvent.Set();
-                }
-                else if (args[i * 5 + 1] == 4)
-                {
-                    _deviceController.Apply();
                 }
                 else if (args[i * 5 + 1] == 5)
                 {
