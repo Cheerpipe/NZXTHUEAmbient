@@ -208,8 +208,6 @@ namespace NZXTHUEAmbient
 
                 }
                 _currentLedsColor = colors;
-                //33ms to limit fps to 30 because it is the framerate pushed by Aurora
-                Thread.Sleep(33);
             }
         }
     }
