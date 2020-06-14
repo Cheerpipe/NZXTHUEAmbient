@@ -34,9 +34,10 @@ namespace NZXTHUEAmbientListener
             if (!_singleInstanceMutex.WaitOne(TimeSpan.Zero, true))
                 return;
 
-            Util.SetPriorityProcessAndThreads(Process.GetCurrentProcess().ProcessName, ProcessPriorityClass.Idle, ThreadPriorityLevel.Lowest);
+            Util.SetPriorityProcessAndThreads(Process.GetCurrentProcess().ProcessName, ProcessPriorityClass.BelowNormal, ThreadPriorityLevel.BelowNormal);
 
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
+            SystemEvents.SessionEnded += SystemEvents_SessionEnded;
 
             HUE2AmbientDeviceLoader.InitDevices().Wait();
 
@@ -49,6 +50,14 @@ namespace NZXTHUEAmbientListener
             {
                 Listener _listener = new Listener(HUE2AmbientDeviceLoader.Devices[c], c);
                 _listeners.Add(_listener); // For issue shutting down or any other broadcast messages
+            }
+        }
+
+        private static void SystemEvents_SessionEnded(object sender, SessionEndedEventArgs e)
+        {
+            foreach (Listener l in _listeners)
+            {
+                l.Setter(new byte[] { 1, 5, 0, 0, 0, 0 });
             }
         }
 
