@@ -26,15 +26,15 @@ namespace NZXTHUEAmbient
         private Color _currentAllLedsColor;
         private Color[] _currentLedsColor;
 
-        private byte _totalLedCount;
+        private int _totalLedCount;
         private IDevice _device;
 
-        private byte _channel1LedCount;
-        private byte _channel2LedCount;
+        private int _channel1LedCount;
+        private int _channel2LedCount;
 
-        public byte Channel1LedCount { get => _channel1LedCount; }
-        public byte Channel2LedCount { get => _channel2LedCount; }
-        public byte TotalLedCount { get => _totalLedCount; }
+        public int Channel1LedCount { get => _channel1LedCount; }
+        public int Channel2LedCount { get => _channel2LedCount; }
+        public int TotalLedCount { get => _totalLedCount; }
 
         public HUE2AmbientDeviceController(IDevice device)
         {
@@ -42,7 +42,6 @@ namespace NZXTHUEAmbient
             _device.InitializeAsync().Wait();
             DetectLedCount().Wait();
             _currentLedsColor = new Color[_totalLedCount];
-            //_newColors = new Color[_totalLedCount];
         }
 
         public async Task SetLeds(Color color)
@@ -155,8 +154,8 @@ namespace NZXTHUEAmbient
                     Array.Reverse(_newcolors, 0, _channel1LedCount);
                 }
 
-                byte _commandsNeeded = (byte)Math.Ceiling(_channel1LedCount / (double)MAX_LEDS_PER_COMMAND);
-                for (byte commandIndex = 0; commandIndex < 2; commandIndex++)
+                byte _commandsNeeded = (byte)Math.Ceiling(_channel1LedCount / (float)MAX_LEDS_PER_COMMAND);
+                for (int commandIndex = 0; commandIndex < 2; commandIndex++)
                 {
                     byte[] _commandHeader = new byte[4]; //Header
                     _commandHeader[0] = 0x24; // Per led command
@@ -179,13 +178,13 @@ namespace NZXTHUEAmbient
                 }
 
                 //Fill channel 2
-                _commandsNeeded = (byte)Math.Ceiling(_channel2LedCount / (double)MAX_LEDS_PER_COMMAND);
+                _commandsNeeded = (byte)Math.Ceiling(_channel2LedCount / (float)MAX_LEDS_PER_COMMAND);
                 //If circular, reverse this channel
                 if (layoutType == LayoutType.Circular)
                 {
                     Array.Reverse(_newcolors, _channel1LedCount, _channel2LedCount);
                 }
-                for (byte commandIndex = 0; commandIndex < 2; commandIndex++)
+                for (int commandIndex = 0; commandIndex < 2; commandIndex++)
                 {
                     byte[] _commandHeader = new byte[4]; //Header
                     _commandHeader[0] = 0x24; // Per led command
@@ -205,7 +204,6 @@ namespace NZXTHUEAmbient
                         });
                     }
                     _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
-
                 }
                 _currentLedsColor = colors;
             }
