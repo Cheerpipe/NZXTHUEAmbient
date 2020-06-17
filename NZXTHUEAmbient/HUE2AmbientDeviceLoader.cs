@@ -18,7 +18,6 @@ namespace NZXTHUEAmbient
 
         public static async Task InitDevices()
         {
-            //WindowsUsbDeviceFactory.Register(null, null);
             WindowsHidDeviceFactory.Register(null, null);
             List<FilterDeviceDefinition> deviceDefinitions = new List<FilterDeviceDefinition>();
             FilterDeviceDefinition d = new FilterDeviceDefinition { DeviceType = DeviceType.Hid, VendorId = 0x1E71, ProductId = 0x2002, Label = "NZXT HUE 2 Ambient " };

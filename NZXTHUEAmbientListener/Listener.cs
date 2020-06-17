@@ -10,8 +10,8 @@ namespace NZXTHUEAmbientListener
     public class Listener
     {
         public bool StopListening = false;
-        private Thread _setterThread;
-        private readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
+        //private Thread _setterThread;
+        //private readonly ManualResetEvent _setterThreadEvent = new ManualResetEvent(false);
         private bool _shutingDown = false;
         private HUE2AmbientDeviceController _deviceController;
         private byte R = 0;
@@ -21,8 +21,8 @@ namespace NZXTHUEAmbientListener
         public Listener(HUE2AmbientDeviceController hue2AmbientDeviceController, int _deviceId)
         {
             _deviceController = hue2AmbientDeviceController;
-            _setterThread = new Thread(DoSetter);
-            _setterThread.Start();
+            //_setterThread = new Thread(DoSetter);
+            //_setterThread.Start();
             StartArgsPipeServer("HUE2AmbientDeviceController" + _deviceId.ToString());
         }
 
@@ -45,17 +45,17 @@ namespace NZXTHUEAmbientListener
                 Setter(args);
             }
         }
-
-        public void DoSetter()
-        {
-            while (_setterThread.IsAlive)
-            {
-                _setterThreadEvent.WaitOne();
-                _deviceController.SetLedsSync(Color.FromArgb(R, G, B));
-                _setterThreadEvent.Reset();
-            }
-        }
-
+        /*
+                public void DoSetter()
+                {
+                    while (_setterThread.IsAlive)
+                    {
+                        _setterThreadEvent.WaitOne();
+                        _deviceController.SetLedsSync(Color.FromArgb(R, G, B));
+                        _setterThreadEvent.Reset();
+                    }
+                }
+        */
         public void Setter(byte[] args)
         {
             if (_shutingDown)
@@ -83,11 +83,11 @@ namespace NZXTHUEAmbientListener
             int commandCount = args[0];
 
             //For each command in data packet process command.
-            for (int i=0; i< commandCount;i++)
+            for (int i = 0; i < commandCount; i++)
             {
-                if (args[i*5+1] == 1) //setledtrx
+                if (args[i * 5 + 1] == 1) //setledtrx
                 {
-                    R =args[i * 5 + 2];
+                    R = args[i * 5 + 2];
                     G = args[i * 5 + 3];
                     B = args[i * 5 + 4];
                     byte led = args[i * 5 + 5];
@@ -102,18 +102,16 @@ namespace NZXTHUEAmbientListener
                     R = args[i * 5 + 2];
                     G = args[i * 5 + 3];
                     B = args[i * 5 + 4];
-                    _setterThreadEvent.Set();
+                    //_setterThreadEvent.Set();
                 }
                 else if (args[i * 5 + 1] == 5)
                 {
                     _shutingDown = true;
-                    // _.StopListening = true;
+                    StopListening = true;
                     R = 0;
                     G = 0;
                     B = 0;
-                    _setterThreadEvent.Set();
-                    Thread.Sleep(1000);
-                    _setterThread.Abort();
+                    _deviceController.SetLedsSync(Color.FromArgb(R, G, B));
                 }
             }
         }

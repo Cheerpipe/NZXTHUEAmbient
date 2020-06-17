@@ -151,6 +151,7 @@ namespace NZXTHUEAmbient
 
             lock (_SetLedsLock)
             {
+                Thread.Sleep(16);
                 Color[] _newcolors = (Color[])colors.Clone();
                 //If Linear, reverse this channel
                 if (layoutType == LayoutType.Linear)
@@ -159,10 +160,10 @@ namespace NZXTHUEAmbient
                 }
 
                 int _commandsNeeded = (int)Math.Ceiling(_channel1LedCount / (float)MAX_LEDS_PER_COMMAND);
+                _commandHeader[2] = 0x01; // Channel 0x01 channel 1 0x02 channel 2
                 for (int commandIndex = 0; commandIndex < 2; commandIndex++)
                 {
                     _commandHeader[1] = (byte)(0x04 + commandIndex); // Device 0x04 device 1 0x05 device 2 0x06 device 3...
-                    _commandHeader[2] = 0x01; // Channel 0x01 channel 1 0x02 channel 2
                     _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
 
                     if (_commandsNeeded > 0)
@@ -176,7 +177,6 @@ namespace NZXTHUEAmbient
                         });
                     }
                     _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
-                    Thread.Sleep(1);
                 }
 
                 //Fill channel 2
@@ -186,10 +186,11 @@ namespace NZXTHUEAmbient
                 {
                     Array.Reverse(_newcolors, _channel1LedCount, _channel2LedCount);
                 }
+
+                _commandHeader[2] = 0x02; // Channel 0x01 channel 1 0x02 channel 2
                 for (int commandIndex = 0; commandIndex < 2; commandIndex++)
                 {
                     _commandHeader[1] = (byte)(0x04 + commandIndex); // Device 0x04 device 1 0x05 device 2 0x06 device 3...
-                    _commandHeader[2] = 0x02; // Channel 0x01 channel 1 0x02 channel 2
                     _commandHeader[3] = (byte)(0x0 + commandIndex * _commandHeader[2]);
 
                     if (_commandsNeeded > 0)
@@ -204,7 +205,6 @@ namespace NZXTHUEAmbient
                         });
                     }
                     _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait();
-                    Thread.Sleep(1);
                 }
                 _currentLedsColor = colors;
             }

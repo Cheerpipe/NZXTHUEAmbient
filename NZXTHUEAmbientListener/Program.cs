@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace NZXTHUEAmbientListener
 {
@@ -51,6 +52,7 @@ namespace NZXTHUEAmbientListener
                 Listener _listener = new Listener(HUE2AmbientDeviceLoader.Devices[c], c);
                 _listeners.Add(_listener); // For issue shutting down or any other broadcast messages
             }
+            Application.Run();
         }
 
         private static void SystemEvents_SessionEnded(object sender, SessionEndedEventArgs e)
