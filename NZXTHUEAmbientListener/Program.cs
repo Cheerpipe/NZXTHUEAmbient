@@ -3,7 +3,6 @@ using Microsoft.Win32;
 using NZXTHUEAmbient;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,8 +14,8 @@ namespace NZXTHUEAmbientListener
 
     internal static class Program
     {
-        internal static Mutex _singleInstanceMutex = new Mutex(true, "{7073d39a-532d-4b06-bde3-19732814ee77}");
-
+        internal static Mutex _singleInstanceMutex;
+        static private int devIndex;
         private static List<Listener> _listeners = new List<Listener>();
         static void Main(string[] args)
         {
@@ -31,27 +30,35 @@ namespace NZXTHUEAmbientListener
                 return;
             }
 
+            try
+            { 
+            int.TryParse(args.Where(a => a.Contains("--dev:")).FirstOrDefault().Split(':')[1], out devIndex);
+            }
+            catch
+            {
+                throw new Exception("No device index supplied");
+            }
+            _singleInstanceMutex = new Mutex(true, "{7073d39a-532d-4b06-bde3-19732814ee77}-" + devIndex);
+
             //No more than one instance runing
             if (!_singleInstanceMutex.WaitOne(TimeSpan.Zero, true))
                 return;
 
-            Util.SetPriorityProcessAndThreads(Process.GetCurrentProcess().ProcessName, ProcessPriorityClass.BelowNormal, ThreadPriorityLevel.BelowNormal);
-
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
             SystemEvents.SessionEnded += SystemEvents_SessionEnded;
 
-            HUE2AmbientDeviceLoader.InitDevices().Wait();
+            HUE2AmbientDeviceLoader.InitDevice(devIndex).Wait();
 
             if (HUE2AmbientDeviceLoader.Devices.Length == 0)
             {
                 throw new Exception("No HUE 2 Ambiente devices found");
             }
 
-            for (int c = 0; c < HUE2AmbientDeviceLoader.Devices.Length; c++)
-            {
-                Listener _listener = new Listener(HUE2AmbientDeviceLoader.Devices[c], c);
-                _listeners.Add(_listener); // For issue shutting down or any other broadcast messages
-            }
+            // for (int c = 0; c < HUE2AmbientDeviceLoader.Devices.Length; c++)
+            // {
+            Listener _listener = new Listener(HUE2AmbientDeviceLoader.Devices[devIndex], devIndex);
+            _listeners.Add(_listener); // For issue shutting down or any other broadcast messages
+                                       // }
             Application.Run();
         }
 

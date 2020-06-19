@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace NZXTHUEAmbientListener
 {
@@ -93,6 +94,10 @@ namespace NZXTHUEAmbientListener
                     byte led = args[i * 5 + 5];
                     _deviceController.SetLed(led, Color.FromArgb(R, G, B));
                 }
+                else if (args[i * 5 + 1] == 2) // Commit
+                {
+                    _deviceController.SetLeds(Color.FromArgb(R, G, B));
+                }
                 else if (args[i * 5 + 1] == 4) // Commit
                 {
                     _deviceController.Apply();
@@ -104,14 +109,20 @@ namespace NZXTHUEAmbientListener
                     B = args[i * 5 + 4];
                     //_setterThreadEvent.Set();
                 }
-                else if (args[i * 5 + 1] == 5)
+                else if (args[i * 5 + 1] == 5) //Shutdown
                 {
                     _shutingDown = true;
                     StopListening = true;
                     R = 0;
                     G = 0;
                     B = 0;
-                    _deviceController.SetLedsSync(Color.FromArgb(R, G, B));
+                    _deviceController.SetLeds(Color.FromArgb(R, G, B));
+                    _deviceController.Dispose();
+                    Application.Exit();
+                }
+                else if (args[i * 5 + 1] == 6) //Reset
+                {
+                    _deviceController.ReInitialize();
                 }
             }
         }

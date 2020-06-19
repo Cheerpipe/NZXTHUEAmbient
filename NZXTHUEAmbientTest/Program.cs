@@ -41,7 +41,7 @@ namespace NZXTHUEAmbient
             16                                                                                                   35
 16            15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0 [CONTROLLER] 51 50 49 48 47 46 45 44 43 42 41 40 39 38 37 36
              */
-            HUE2AmbientDeviceLoader.InitDevices().Wait();
+            HUE2AmbientDeviceLoader.InitDevice(0).Wait();
 
             foreach (HUE2AmbientDeviceController controller in HUE2AmbientDeviceLoader.Devices)
 
@@ -85,7 +85,7 @@ namespace NZXTHUEAmbient
 
         private static void AllExample(Color color, HUE2AmbientDeviceController controller)
         {
-            controller.SetLedsSync(color);
+            controller.SetLeds(color);
         }
 
 
@@ -149,7 +149,7 @@ namespace NZXTHUEAmbient
                         newColors[totalLeds - 1] = Color.FromArgb(0, 0, 0);
                     else
                         newColors[i - 1] = Color.FromArgb(0, 0, 0);
-                    controller.SetLeds(newColors, HUE2AmbientDeviceController.LayoutType.Linear).Wait();
+                    controller.SetLeds(newColors, HUE2AmbientDeviceController.LayoutType.Linear);
 
 
                 }

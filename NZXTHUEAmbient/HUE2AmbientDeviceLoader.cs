@@ -2,10 +2,8 @@
 using Hid.Net.Windows;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Usb.Net.Windows;
+
 
 namespace NZXTHUEAmbient
 {
@@ -16,7 +14,7 @@ namespace NZXTHUEAmbient
         private static HUE2AmbientDeviceController[] _HUE2AmbientDeviceController;
         public static HUE2AmbientDeviceController[] Devices { get => _HUE2AmbientDeviceController; }
 
-        public static async Task InitDevices()
+        public static async Task InitDevice(int deviceIndex)
         {
             WindowsHidDeviceFactory.Register(null, null);
             List<FilterDeviceDefinition> deviceDefinitions = new List<FilterDeviceDefinition>();
@@ -24,12 +22,14 @@ namespace NZXTHUEAmbient
             deviceDefinitions.Add(d);
             List<IDevice> devices = await DeviceManager.Current.GetDevicesAsync(deviceDefinitions);
             _devices = devices.ToArray();
+            if (deviceIndex > _devices.Length)
+                throw new Exception("Device index is grater than device count");
             _HUE2AmbientDeviceController = new HUE2AmbientDeviceController[_devices.Length];
 
-            for (byte i = 0; i < _devices.Length; i++)
-            {
-                _HUE2AmbientDeviceController[i] = new HUE2AmbientDeviceController(_devices[i]);
-            }
+            // for (byte i = 0; i < _devices.Length; i++)
+            // {
+            _HUE2AmbientDeviceController[deviceIndex] = new HUE2AmbientDeviceController(_devices[deviceIndex]);
+            // }
         }
     }
 }
