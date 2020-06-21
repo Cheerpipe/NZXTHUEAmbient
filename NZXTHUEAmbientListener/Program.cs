@@ -30,9 +30,11 @@ namespace NZXTHUEAmbientListener
                 return;
             }
 
+            bool useLastSetting = args.Contains("--uselastsetting");
+
             try
-            { 
-            int.TryParse(args.Where(a => a.Contains("--dev:")).FirstOrDefault().Split(':')[1], out devIndex);
+            {
+                int.TryParse(args.Where(a => a.Contains("--dev:")).FirstOrDefault().Split(':')[1], out devIndex);
             }
             catch
             {
@@ -47,18 +49,15 @@ namespace NZXTHUEAmbientListener
             SystemEvents.SessionEnding += SystemEvents_SessionEnding;
             SystemEvents.SessionEnded += SystemEvents_SessionEnded;
 
-            HUE2AmbientDeviceLoader.InitDevice(devIndex).Wait();
+            HUE2AmbientDeviceLoader.InitDevice(devIndex, useLastSetting).Wait();
 
             if (HUE2AmbientDeviceLoader.Devices.Length == 0)
             {
                 throw new Exception("No HUE 2 Ambiente devices found");
             }
 
-            // for (int c = 0; c < HUE2AmbientDeviceLoader.Devices.Length; c++)
-            // {
             Listener _listener = new Listener(HUE2AmbientDeviceLoader.Devices[devIndex], devIndex);
-            _listeners.Add(_listener); // For issue shutting down or any other broadcast messages
-                                       // }
+            _listeners.Add(_listener);
             Application.Run();
         }
 

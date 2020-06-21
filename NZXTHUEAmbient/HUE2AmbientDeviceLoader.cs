@@ -14,7 +14,7 @@ namespace NZXTHUEAmbient
         private static HUE2AmbientDeviceController[] _HUE2AmbientDeviceController;
         public static HUE2AmbientDeviceController[] Devices { get => _HUE2AmbientDeviceController; }
 
-        public static async Task InitDevice(int deviceIndex)
+        public static async Task InitDevice(int deviceIndex, bool useLastSetting = false)
         {
             WindowsHidDeviceFactory.Register(null, null);
             List<FilterDeviceDefinition> deviceDefinitions = new List<FilterDeviceDefinition>();
@@ -25,11 +25,7 @@ namespace NZXTHUEAmbient
             if (deviceIndex > _devices.Length)
                 throw new Exception("Device index is grater than device count");
             _HUE2AmbientDeviceController = new HUE2AmbientDeviceController[_devices.Length];
-
-            // for (byte i = 0; i < _devices.Length; i++)
-            // {
-            _HUE2AmbientDeviceController[deviceIndex] = new HUE2AmbientDeviceController(_devices[deviceIndex]);
-            // }
+            _HUE2AmbientDeviceController[deviceIndex] = new HUE2AmbientDeviceController(_devices[deviceIndex], useLastSetting);
         }
     }
 }

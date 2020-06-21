@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,6 +21,8 @@ namespace NZXTHUEAmbient
         private const int MAX_LEDS_PER_COMMAND = 20;
         private const int LED_COMMAND_DATA_LENGHT = MAX_LEDS_PER_COMMAND * 3;
 
+        private string _hidDeviceId = string.Empty;
+
         byte[] _commandData = new byte[LED_COMMAND_DATA_LENGHT];
 
         byte[] _commandHeader = new byte[4]; //Header
@@ -34,21 +37,21 @@ namespace NZXTHUEAmbient
 
         private int _channel1LedCount;
         private int _channel2LedCount;
-
         public int Channel1LedCount { get => _channel1LedCount; }
         public int Channel2LedCount { get => _channel2LedCount; }
         public int TotalLedCount { get => _totalLedCount; }
 
-        public HUE2AmbientDeviceController(IDevice device)
+        public HUE2AmbientDeviceController(IDevice device, bool useLastSetting = false)
         {
-            Initialize(device);
+            Initialize(device, useLastSetting);
         }
-        public void Initialize(IDevice device)
+        public void Initialize(IDevice device, bool useLastSetting = false)
         {
             _device = (WindowsHidDevice)device;
             _device.InitializeAsync().Wait();
+            _hidDeviceId = Regex.Match(_device.DeviceId, @"&pid_2002#7&(.+?)&").Groups[1].Value;
             if (_totalLedCount == 0)
-                DetectLedCount().Wait();
+                DetectLedCount(useLastSetting).Wait();
             _currentLedsColor = new Color[_totalLedCount];
             _commandHeader[0] = 0x24; // Direct  led command
         }
@@ -111,21 +114,50 @@ namespace NZXTHUEAmbient
             _currentLedsColor[led] = color;
         }
 
-        //TODO cache led count to start up device init and avoid black screen
-        private async Task DetectLedCount()
+        private void SaveLedCountToRegistry(int channel, int ledCount)
         {
-            byte[] request = new byte[64];
-            request[0] = 0x20;
-            request[1] = 0x03;
-            request[2] = 0x00;
-            byte[] response = await _device.WriteAndReadAsync(request);
+            var reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\NZXT HUE Controller\" + _hidDeviceId, true);
+            if (reg == null)
+                reg = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\NZXT HUE Controller\" + _hidDeviceId);
+            reg.SetValue("Channel_" + channel, ledCount);
+        }
 
-            _channel1LedCount = 0;
-            for (byte i = 15; i <= 20; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //15 to 20 contains channel 1 device types
+        private int GetLedCountFromRegistry(int channel)
+        {
+            var reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\NZXT HUE Controller\" + _hidDeviceId, true);
+            if (reg == null)
+                return -1;
+            return (int)reg.GetValue("Channel_" + channel, -1);
+        }
 
-            _channel2LedCount = 0;
-            for (byte i = 21; i <= 26; i++) { _channel2LedCount += _stripLenghts[response[i]]; } //21 to 26 contains channel 2 device types
+        //TODO cache led count to start up device init and avoid black screen
+        private async Task DetectLedCount(bool useLastSetting = false)
+        {
 
+            if (useLastSetting)
+            {
+                _channel1LedCount = GetLedCountFromRegistry(1);
+                _channel2LedCount = GetLedCountFromRegistry(2);
+            }
+
+            if (_channel1LedCount == -1 || _channel2LedCount == -1)
+            {
+                byte[] request = new byte[64];
+                request[0] = 0x20;
+                request[1] = 0x03;
+                request[2] = 0x00;
+                byte[] response = await _device.WriteAndReadAsync(request);
+
+                _channel1LedCount = 0;
+                for (byte i = 15; i <= 20; i++) { _channel1LedCount += _stripLenghts[response[i]]; } //15 to 20 contains channel 1 device types
+
+                _channel2LedCount = 0;
+                for (byte i = 21; i <= 26; i++) { _channel2LedCount += _stripLenghts[response[i]]; } //21 to 26 contains channel 2 device types
+
+                SaveLedCountToRegistry(1, _channel1LedCount);
+                SaveLedCountToRegistry(2, _channel1LedCount);
+
+            }
             _totalLedCount = (byte)(_channel1LedCount + _channel2LedCount);
         }
 
@@ -175,7 +207,7 @@ namespace NZXTHUEAmbient
                     _commandData[dataPosition * 3 + 1] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].R;
                     _commandData[dataPosition * 3 + 2] = _newcolors[dataPosition + MAX_LEDS_PER_COMMAND * commandIndex].B;
                 }//);
-                _ = _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait(16);
+                _ = _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait(100);
             }
 
             //Fill channel 2
@@ -203,7 +235,7 @@ namespace NZXTHUEAmbient
                     _commandData[dataPosition * 3 + 2] = _newcolors[(dataPosition + MAX_LEDS_PER_COMMAND * commandIndex) + _channel1LedCount].B;
                 }//);
 
-                _ = _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait(16);
+                _ = _device.WriteAsync(_commandHeader.Concat(_commandData).ToArray()).Wait(100);
             }
             _currentLedsColor = colors;
             if (_device.IsInitialized == false)
