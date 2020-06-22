@@ -111,6 +111,8 @@ namespace NZXTHUEAmbient
 
         public void SetLed(byte led, Color color)
         {
+            if (led >= _currentLedsColor.Length)
+                return;
             _currentLedsColor[led] = color;
         }
 
