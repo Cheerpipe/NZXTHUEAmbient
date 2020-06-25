@@ -94,8 +94,11 @@ namespace NZXTHUEAmbientListener
                     byte led = args[i * 5 + 5];
                     _deviceController.SetLed(led, Color.FromArgb(R, G, B));
                 }
-                else if (args[i * 5 + 1] == 2) // Commit
+                else if (args[i * 5 + 1] == 2) // Setleds (All)
                 {
+                    R = args[i * 5 + 2];
+                    G = args[i * 5 + 3];
+                    B = args[i * 5 + 4];
                     _deviceController.SetLeds(Color.FromArgb(R, G, B));
                 }
                 else if (args[i * 5 + 1] == 4) // Commit
@@ -113,10 +116,9 @@ namespace NZXTHUEAmbientListener
                 {
                     _shutingDown = true;
                     StopListening = true;
-                    R = 0;
-                    G = 0;
-                    B = 0;
-                    _deviceController.SetLeds(Color.FromArgb(R, G, B));
+                    _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
+                    _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
+                    _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
                     _deviceController.Dispose();
                     Application.Exit();
                 }
