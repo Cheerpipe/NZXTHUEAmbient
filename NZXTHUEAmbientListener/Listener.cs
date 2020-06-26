@@ -115,11 +115,12 @@ namespace NZXTHUEAmbientListener
                 else if (args[i * 5 + 1] == 5) //Shutdown
                 {
                     _shutingDown = true;
-                    StopListening = true;
+
                     _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
                     _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
                     _deviceController.SetLeds(Color.FromArgb(0, 0, 0));
                     _deviceController.Dispose();
+                    StopListening = true;
                     Application.Exit();
                 }
                 else if (args[i * 5 + 1] == 6) //Reset
