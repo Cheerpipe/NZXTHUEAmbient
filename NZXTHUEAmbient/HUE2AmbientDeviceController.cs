@@ -35,8 +35,8 @@ namespace NZXTHUEAmbient
         private int _totalLedCount;
         private WindowsHidDevice _device;
 
-        private int _channel1LedCount;
-        private int _channel2LedCount;
+        private int _channel1LedCount = -1;
+        private int _channel2LedCount = -1;
         public int Channel1LedCount { get => _channel1LedCount; }
         public int Channel2LedCount { get => _channel2LedCount; }
         public int TotalLedCount { get => _totalLedCount; }
@@ -49,7 +49,7 @@ namespace NZXTHUEAmbient
         {
             _device = (WindowsHidDevice)device;
             _device.InitializeAsync().Wait();
-            _hidDeviceId = Regex.Match(_device.DeviceId, @"&pid_2002#7&(.+?)&").Groups[1].Value;
+            _hidDeviceId = Regex.Match(_device.DeviceId, @"&pid_2002#[0-9]&(.+?)&").Groups[1].Value;
             if (_totalLedCount == 0)
                 DetectLedCount(useLastSetting).Wait();
             _currentLedsColor = new Color[_totalLedCount];
