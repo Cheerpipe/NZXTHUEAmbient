@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using NZXTHUEAmbient;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -29,6 +30,8 @@ namespace NZXTHUEAmbientListener
                 Util.ngen(Util.NgenOperation.Uninstall);
                 return;
             }
+            
+            Util.SetPriorityProcessAndThreads(Process.GetCurrentProcess().ProcessName, ProcessPriorityClass.AboveNormal, ThreadPriorityLevel.AboveNormal);
 
             bool useLastSetting = args.Contains("--uselastsetting");
 
