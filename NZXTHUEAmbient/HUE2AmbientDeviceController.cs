@@ -185,7 +185,6 @@ namespace NZXTHUEAmbient
             }
             //Fill channel 1
             int maxLedIndexForCommand;
-            Thread.Sleep(16);
             Color[] _newcolors = (Color[])colors.Clone();
             //If Linear, reverse this channel
             if (layoutType == LayoutType.Linear)
